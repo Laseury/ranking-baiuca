@@ -7,6 +7,7 @@ import Ranking from './pages/Ranking';
 import MatchMakerPage from './pages/MatchMakerPage';
 import History from './pages/History';
 import NewPlayer from './pages/NewPlayer';
+import PlayerProfile from './pages/PlayerProfile';
 import './App.css';
 
 // Componente para proteger as rotas
@@ -41,6 +42,11 @@ function AppContent() {
                         <Route path="/new-player" element={
                             <PrivateRoute>
                                 <NewPlayer />
+                            </PrivateRoute>
+                        } />
+                        <Route path="/player/:name" element={
+                            <PrivateRoute>
+                                <PlayerProfile />
                             </PrivateRoute>
                         } />
                     </Routes>

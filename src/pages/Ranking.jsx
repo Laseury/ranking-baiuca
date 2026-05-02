@@ -1,28 +1,70 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
+import { getElo } from '../utils/elo';
+import { CURRENT_SEASON } from '../context/AppContext';
 
-function processPlayers(players) {
-    return players.map(player => {
+function processPlayersBySeason(players, history, selectedSeason) {
+    // 1. Inicializa estatísticas da temporada para todos os jogadores
+    const seasonStats = {};
+    players.forEach(p => {
+        seasonStats[p.name] = {
+            ...p,
+            vitorias: 0,
+            derrotas: 0,
+            total: 0,
+            rating: 1000,
+            streak: []
+        };
+    });
+
+    // 2. Filtra o histórico pela temporada selecionada
+    // Se a partida não tiver season, assumimos Season 1
+    const seasonMatches = history.filter(m => 
+        m.season === selectedSeason || (!m.season && selectedSeason === 'Season 1')
+    );
+
+    // 3. Recalcula estatísticas a partir das partidas (em ordem cronológica)
+    [...seasonMatches].sort((a, b) => a.timestamp - b.timestamp).forEach(match => {
+        match.winners.forEach(name => {
+            if (seasonStats[name]) {
+                seasonStats[name].vitorias++;
+                seasonStats[name].total++;
+                seasonStats[name].rating += (match.pontosGanhos || 20);
+                seasonStats[name].streak = [...(seasonStats[name].streak || []), "W"].slice(-5);
+            }
+        });
+        match.losers.forEach(name => {
+            if (seasonStats[name]) {
+                seasonStats[name].derrotas++;
+                seasonStats[name].total++;
+                seasonStats[name].rating = Math.max(0, seasonStats[name].rating - (match.pontosPerdidos || 20));
+                seasonStats[name].streak = [...(seasonStats[name].streak || []), "L"].slice(-5);
+            }
+        });
+    });
+
+    // 4. Formata dados finais e calcula Elos
+    return Object.values(seasonStats).map(player => {
         const winrate = player.total > 0 ? ((player.vitorias / player.total) * 100).toFixed(1) : 0;
-        // Agora usamos o rating (PDL) como a pontuação principal
-        const pontos = player.rating !== undefined ? player.rating : (1000 + (player.vitorias - player.derrotas) * 20);
-
+        const elo = getElo(player.rating);
         return {
             ...player,
             winrate: parseFloat(winrate),
-            pontos
+            pontos: player.rating,
+            elo
         };
     });
 }
 
 function Ranking() {
-    const { players } = useContext(AppContext);
+    const { players, history } = useContext(AppContext);
+    const [selectedSeason, setSelectedSeason] = useState(CURRENT_SEASON);
     const [officialPlayers, setOfficialPlayers] = useState([]);
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
 
     useEffect(() => {
-        const processedPlayers = processPlayers(players);
+        const processedPlayers = processPlayersBySeason(players, history, selectedSeason);
 
         processedPlayers.sort((a, b) => {
             if (b.pontos !== a.pontos) {
@@ -33,34 +75,26 @@ function Ranking() {
 
         setOfficialPlayers(processedPlayers.filter(p => p.total >= 10));
         setProvisionalPlayers(processedPlayers.filter(p => p.total < 10));
-    }, [players]);
+    }, [players, history, selectedSeason]);
 
-    const getMVP = () => {
-        if (!players.length) return null;
-        return [...processPlayers(players)].sort((a, b) => b.pontos - a.pontos)[0];
-    };
-
-    const getBestWinrate = () => {
-        const eligible = processPlayers(players).filter(p => p.total >= 10);
-        if (!eligible.length) return null;
-        return [...eligible].sort((a, b) => b.winrate - a.winrate)[0];
-    };
-
-    const getMostExperienced = () => {
-        if (!players.length) return null;
-        return [...players].sort((a, b) => b.total - a.total)[0];
-    };
-
-    const mvp = getMVP();
-    const bestWinrate = getBestWinrate();
-    const mostExp = getMostExperienced();
+    const mvp = officialPlayers[0] || provisionalPlayers[0] || null;
+    const bestWinrate = [...officialPlayers].sort((a, b) => b.winrate - a.winrate)[0];
+    const mostExp = [...officialPlayers, ...provisionalPlayers].sort((a, b) => b.total - a.total)[0];
 
     return (
         <div className="fade-in">
             <header>
                 <div className="logo-glow"></div>
                 <h1>LEAGUE <span>OF</span> LEGENDS</h1>
-                <p className="subtitle">Ranking Competitivo</p>
+                <div className="header-controls">
+                    <p className="subtitle">Ranking Competitivo</p>
+                    <div className="season-selector">
+                        <select value={selectedSeason} onChange={(e) => setSelectedSeason(e.target.value)}>
+                            <option value="Season 1">Temporada 1</option>
+                            <option value="Season 2">Temporada 2</option>
+                        </select>
+                    </div>
+                </div>
             </header>
 
             <div className="dashboard-grid">

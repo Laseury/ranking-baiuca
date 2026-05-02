@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Streak from './Streak';
 
 function PlayerRow({ player, index, isOfficial }) {
@@ -16,12 +17,21 @@ function PlayerRow({ player, index, isOfficial }) {
     return (
         <tr className={`player-row ${rankClass}`} style={{ animationDelay }}>
             <td className="rank-col">#{index + 1}</td>
-            <td className="player-col">{player.name}</td>
+            <td className="player-col">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <span className={`elo-badge ${player.elo?.class || 'elo-iron'}`}>
+                        {player.elo?.icon || '⚙️'} {player.elo?.name || 'Ferro'}
+                    </span>
+                    <Link to={`/player/${player.name}`} className="player-link">
+                        {player.name}
+                    </Link>
+                </div>
+            </td>
             <td>{player.total}</td>
             <td>{player.vitorias}</td>
             <td>{player.derrotas}</td>
             <td className={winrateClass}>{player.winrate}%</td>
-            <td className="points-col">{player.pontos} pts</td>
+            <td className="points-col">{player.pontos} PDL</td>
             <td>
                 <div className="streak-container">
                     <Streak history={player.streak} />

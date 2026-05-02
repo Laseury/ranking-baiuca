@@ -23,6 +23,8 @@ const defaultPlayers = [
     { name: "Roisfe", total: 0, vitorias: 0, derrotas: 0, streak: [] }
 ];
 
+export const CURRENT_SEASON = 'Season 1';
+
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [players, setPlayers] = useState([]);
@@ -222,6 +224,7 @@ export const AppProvider = ({ children }) => {
                 losers: losers.map(l => l.name),
                 pontosGanhos: P,
                 pontosPerdidos: P,
+                season: CURRENT_SEASON,
                 createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
