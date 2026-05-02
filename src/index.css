@@ -1124,6 +1124,88 @@ th {
     white-space: normal;
     word-break: break-word;
   }
+
+  /* Mobile Cards View */
+  .player-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: transparent;
+    width: calc(100% + 2rem);
+    margin: 0 -1rem;
+  }
+
+  .player-card-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.2rem;
+    position: relative;
+    border-left: 4px solid var(--glass-border);
+    border-radius: 8px;
+    animation: fadeSlideIn 0.5s ease-out forwards;
+  }
+
+  .player-card-mobile.rank-1 { border-left-color: #ffd700; background: rgba(255, 215, 0, 0.05) !important; }
+  .player-card-mobile.rank-2 { border-left-color: #c0c0c0; background: rgba(192, 192, 192, 0.05) !important; }
+  .player-card-mobile.rank-3 { border-left-color: #cd7f32; background: rgba(205, 127, 50, 0.05) !important; }
+
+  .card-mobile-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .card-mobile-header .player-link {
+    font-size: 1.1rem;
+    font-weight: 800;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .card-mobile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .stat-item .label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-item .value {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .card-mobile-footer {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 0.5rem;
+  }
+
+  .mobile-grid {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1145,4 +1227,15 @@ th {
     padding: 0.1rem 0.4rem;
     font-size: 0.65rem;
   }
+}
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  border-color: var(--primary-color);
 }

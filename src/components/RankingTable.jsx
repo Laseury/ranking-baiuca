@@ -1,9 +1,25 @@
 import React from 'react';
 import PlayerRow from './PlayerRow';
+import PlayerCard from './PlayerCard';
 
-function RankingTable({ players, isOfficial }) {
+function RankingTable({ players, isOfficial, isMobileView }) {
     if (players.length === 0) {
         return <div className="empty-state">Nenhum jogador nesta categoria.</div>;
+    }
+
+    if (isMobileView) {
+        return (
+            <div className="player-cards-grid">
+                {players.map((player, index) => (
+                    <PlayerCard 
+                        key={player.id} 
+                        player={player} 
+                        index={index} 
+                        isOfficial={isOfficial} 
+                    />
+                ))}
+            </div>
+        );
     }
 
     return (

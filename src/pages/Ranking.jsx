@@ -63,6 +63,16 @@ function Ranking() {
     const [selectedSeason, setSelectedSeason] = useState("Season 1");
     const [officialPlayers, setOfficialPlayers] = useState([]);
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
+    const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            // Só atualiza automaticamente se o usuário ainda não tiver "forçado" uma visão
+            // Mas para simplificar, vamos deixar o usuário decidir.
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         setSelectedSeason(currentSeason);
@@ -141,6 +151,13 @@ function Ranking() {
                             Nova Temp.
                         </button>
                     </div>
+                    <button 
+                        className="btn secondary-btn" 
+                        style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', marginTop: '0.5rem' }}
+                        onClick={() => setIsMobileView(!isMobileView)}
+                    >
+                        {isMobileView ? 'Ver Modo Desktop 🖥️' : 'Ver Modo Mobile 📱'}
+                    </button>
                 </div>
             </header>
 
@@ -182,8 +199,8 @@ function Ranking() {
                     <h2>Ranking Oficial</h2>
                     <span className="badge">10+ Partidas</span>
                 </div>
-                <div className="table-container glass-panel">
-                    <RankingTable players={officialPlayers} isOfficial={true} />
+                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
+                    <RankingTable players={officialPlayers} isOfficial={true} isMobileView={isMobileView} />
                 </div>
             </section>
 
@@ -192,8 +209,8 @@ function Ranking() {
                     <h2>Ranking Provisório</h2>
                     <span className="badge warning">Menos de 10 Partidas</span>
                 </div>
-                <div className="table-container glass-panel">
-                    <RankingTable players={provisionalPlayers} isOfficial={false} />
+                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
+                    <RankingTable players={provisionalPlayers} isOfficial={false} isMobileView={isMobileView} />
                 </div>
             </section>
         </div>
