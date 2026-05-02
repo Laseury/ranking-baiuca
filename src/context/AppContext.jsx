@@ -174,11 +174,14 @@ export const AppProvider = ({ children }) => {
 
             await Promise.all(updatePromises);
 
+            const author = user.email ? user.email.split('@')[0] : 'Desconhecido';
+
             const newMatch = {
                 date: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
                 timestamp: Date.now(),
                 winners: winners.map(w => w.name),
-                losers: losers.map(l => l.name)
+                losers: losers.map(l => l.name),
+                createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
 

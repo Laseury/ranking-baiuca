@@ -58,6 +58,7 @@ function History() {
                                 <th>Data</th>
                                 <th>Time Vencedor</th>
                                 <th>Time Perdedor</th>
+                                <th>Registrado por</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,6 +67,11 @@ function History() {
                                     <td>{match.date}</td>
                                     <td className="winrate-high">{match.winners.join(', ')}</td>
                                     <td className="winrate-low">{match.losers.join(', ')}</td>
+                                    <td>
+                                        <span className="badge" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)' }}>
+                                            👤 {match.createdBy || 'Sistema'}
+                                        </span>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
