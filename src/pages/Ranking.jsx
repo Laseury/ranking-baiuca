@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
 import { getElo } from '../utils/elo';
-import { CURRENT_SEASON } from '../context/AppContext';
 
 function processPlayersBySeason(players, history, selectedSeason) {
     // 1. Inicializa estatísticas da temporada para todos os jogadores
@@ -57,17 +56,23 @@ function processPlayersBySeason(players, history, selectedSeason) {
     });
 }
 
+import Swal from 'sweetalert2';
+
 function Ranking() {
-    const { players, history } = useContext(AppContext);
-    const [selectedSeason, setSelectedSeason] = useState(CURRENT_SEASON);
+    const { players, history, currentSeason, changeSeason } = useContext(AppContext);
+    const [selectedSeason, setSelectedSeason] = useState("Season 1");
     const [officialPlayers, setOfficialPlayers] = useState([]);
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
 
     useEffect(() => {
+        setSelectedSeason(currentSeason);
+    }, [currentSeason]);
+
+    useEffect(() => {
         let processedPlayers;
 
-        if (selectedSeason === CURRENT_SEASON) {
-            // Para a temporada atual, usamos os dados 'Live' do Firestore que já incluem a migração inicial
+        if (selectedSeason === currentSeason && selectedSeason === "Season 1") {
+            // Caso especial para a Temporada 1 original manter os pontos migrados
             processedPlayers = players.map(p => {
                 const winrate = p.total > 0 ? ((p.vitorias / p.total) * 100).toFixed(1) : 0;
                 const rating = p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
@@ -79,7 +84,7 @@ function Ranking() {
                 };
             });
         } else {
-            // Para outras temporadas, recalculamos do zero a partir do histórico
+            // Para novas temporadas ou consulta de históricas, recalcula do zero a partir do histórico
             processedPlayers = processPlayersBySeason(players, history, selectedSeason);
         }
 
@@ -92,7 +97,29 @@ function Ranking() {
 
         setOfficialPlayers(processedPlayers.filter(p => p.total >= 10));
         setProvisionalPlayers(processedPlayers.filter(p => p.total < 10));
-    }, [players, history, selectedSeason]);
+    }, [players, history, selectedSeason, currentSeason]);
+
+    const handleNextSeason = async () => {
+        const { value: code } = await Swal.fire({
+            title: 'Iniciar Nova Temporada?',
+            text: 'Isso irá arquivar o ranking atual e começar um novo. Digite o código de confirmação:',
+            input: 'password',
+            inputPlaceholder: 'Código baiuca',
+            showCancelButton: true,
+            background: '#0a0e14',
+            color: '#f0e6d2',
+            confirmButtonColor: '#c89b3c'
+        });
+
+        if (code === 'baiuca') {
+            const nextSeasonNum = parseInt(currentSeason.split(' ')[1]) || 1;
+            const newSeasonName = `Season ${nextSeasonNum + 1}`;
+            await changeSeason(newSeasonName);
+            Swal.fire('Sucesso!', `Iniciada a ${newSeasonName}`, 'success');
+        } else if (code) {
+            Swal.fire('Erro', 'Código incorreto!', 'error');
+        }
+    };
 
     const mvp = officialPlayers[0] || provisionalPlayers[0] || null;
     const bestWinrate = [...officialPlayers].sort((a, b) => b.winrate - a.winrate)[0];
@@ -105,11 +132,14 @@ function Ranking() {
                 <h1>LEAGUE <span>OF</span> LEGENDS</h1>
                 <div className="header-controls">
                     <p className="subtitle">Ranking Competitivo</p>
-                    <div className="season-selector">
+                    <div className="season-selector" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <select value={selectedSeason} onChange={(e) => setSelectedSeason(e.target.value)}>
                             <option value="Season 1">Temporada 1</option>
-                            <option value="Season 2">Temporada 2</option>
+                            {currentSeason !== "Season 1" && <option value={currentSeason}>{currentSeason.replace('Season', 'Temporada')}</option>}
                         </select>
+                        <button className="btn purple-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={handleNextSeason}>
+                            Nova Temp.
+                        </button>
                     </div>
                 </div>
             </header>
