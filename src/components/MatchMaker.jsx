@@ -137,7 +137,8 @@ function MatchMaker({ players, onMatchResult }) {
                         <div className="players-grid" style={{ marginBottom: 0 }}>
                             {players.map(p => (
                                 <div key={p.id} className={`player-card ${manualWinners.includes(p.id) ? 'selected' : ''}`} onClick={() => toggleManualPlayer(p.id, true)} style={{ padding: '0.5rem' }}>
-                                    <h4 style={{ fontSize: '1rem', textAlign: 'center' }}>{p.name}</h4>
+                                    <h4 style={{ fontSize: '1rem', textAlign: 'center', marginBottom: 0 }}>{p.name}</h4>
+                                    <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{p.rating || (1000 + (p.vitorias - p.derrotas) * 20)} PDL</span>
                                 </div>
                             ))}
                         </div>
@@ -147,7 +148,8 @@ function MatchMaker({ players, onMatchResult }) {
                         <div className="players-grid" style={{ marginBottom: 0 }}>
                             {players.map(p => (
                                 <div key={p.id} className={`player-card ${manualLosers.includes(p.id) ? 'selected-loss' : ''}`} onClick={() => toggleManualPlayer(p.id, false)} style={{ padding: '0.5rem' }}>
-                                    <h4 style={{ fontSize: '1rem', textAlign: 'center' }}>{p.name}</h4>
+                                    <h4 style={{ fontSize: '1rem', textAlign: 'center', marginBottom: 0 }}>{p.name}</h4>
+                                    <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>{p.rating || (1000 + (p.vitorias - p.derrotas) * 20)} PDL</span>
                                 </div>
                             ))}
                         </div>
@@ -189,7 +191,7 @@ function MatchMaker({ players, onMatchResult }) {
                             onClick={() => togglePlayer(player.id)}
                         >
                             <h4>{player.name}</h4>
-                            <span>{isSelected ? 'Selecionado' : 'Clique para selecionar'}</span>
+                            <span className="player-rating">{player.rating || (1000 + (player.vitorias - player.derrotas) * 20)} PDL</span>
                         </div>
                     );
                 })}

@@ -5,7 +5,8 @@ import RankingTable from '../components/RankingTable';
 function processPlayers(players) {
     return players.map(player => {
         const winrate = player.total > 0 ? ((player.vitorias / player.total) * 100).toFixed(1) : 0;
-        const pontos = player.vitorias;
+        // Agora usamos o rating (PDL) como a pontuação principal
+        const pontos = player.rating !== undefined ? player.rating : (1000 + (player.vitorias - player.derrotas) * 20);
 
         return {
             ...player,

@@ -88,6 +88,25 @@ export const AppProvider = ({ children }) => {
         };
     }, [user]);
 
+    // Migração inicial para o novo sistema de ranking
+    useEffect(() => {
+        if (players.length > 0 && user) {
+            const playersToUpdate = players.filter(p => p.rating === undefined);
+            if (playersToUpdate.length > 0) {
+                console.log("Iniciando migração de rating para", playersToUpdate.length, "jogadores");
+                playersToUpdate.forEach(async (p) => {
+                    try {
+                        const initialRating = 1000 + ((p.vitorias || 0) - (p.derrotas || 0)) * 20;
+                        const playerRef = doc(db, "players", p.id);
+                        await updateDoc(playerRef, { rating: initialRating });
+                    } catch (err) {
+                        console.error("Erro na migração do jogador", p.name, err);
+                    }
+                });
+            }
+        }
+    }, [players, user]);
+
     const login = async (userInput, password) => {
         try {
             // Se o usuário já digitar um e-mail, usa ele. Se não, adiciona o @baiuca.com
@@ -135,6 +154,7 @@ export const AppProvider = ({ children }) => {
             total: 0,
             vitorias: 0,
             derrotas: 0,
+            rating: 1000,
             streak: []
         };
         try {
@@ -146,28 +166,48 @@ export const AppProvider = ({ children }) => {
 
     const handleMatchResult = async (winners, losers) => {
         try {
+            // Cálculo da média de rating dos times para o ELO
+            // Se o jogador não tiver rating (ainda não migrado), usamos a fórmula de ajuste inicial
+            const getRating = (p) => p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
+            
+            const avgWinners = winners.reduce((sum, p) => sum + getRating(p), 0) / winners.length;
+            const avgLosers = losers.reduce((sum, p) => sum + getRating(p), 0) / losers.length;
+
+            // Fórmula ELO da imagem: E = 1 / (1 + 10^((R_adv - R_self) / 800))
+            // E é a probabilidade do time vencedor ganhar
+            const exponent = (avgLosers - avgWinners) / 800;
+            const E = 1 / (1 + Math.pow(10, exponent));
+
+            // Cálculo de Pontos (P): P = 18 + (1 - E) * 9
+            const P = Math.round(18 + (1 - E) * 9);
+            const lossP = P - 3; // Ajuste recomendado da imagem: Derrota perde (P - 3)
+
             const updatePromises = [];
 
             winners.forEach(p => {
-                const newStreak = [...p.streak, "W"];
+                const currentRating = getRating(p);
+                const newStreak = [...(p.streak || []), "W"];
                 if(newStreak.length > 5) newStreak.shift();
                 
                 const playerRef = doc(db, "players", p.id);
                 updatePromises.push(updateDoc(playerRef, {
-                    total: p.total + 1,
-                    vitorias: p.vitorias + 1,
+                    total: (p.total || 0) + 1,
+                    vitorias: (p.vitorias || 0) + 1,
+                    rating: currentRating + P,
                     streak: newStreak
                 }));
             });
 
             losers.forEach(p => {
-                const newStreak = [...p.streak, "L"];
+                const currentRating = getRating(p);
+                const newStreak = [...(p.streak || []), "L"];
                 if(newStreak.length > 5) newStreak.shift();
 
                 const playerRef = doc(db, "players", p.id);
                 updatePromises.push(updateDoc(playerRef, {
-                    total: p.total + 1,
-                    derrotas: p.derrotas + 1,
+                    total: (p.total || 0) + 1,
+                    derrotas: (p.derrotas || 0) + 1,
+                    rating: Math.max(0, currentRating - lossP),
                     streak: newStreak
                 }));
             });
@@ -181,6 +221,8 @@ export const AppProvider = ({ children }) => {
                 timestamp: Date.now(),
                 winners: winners.map(w => w.name),
                 losers: losers.map(l => l.name),
+                pontosGanhos: P,
+                pontosPerdidos: lossP,
                 createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
