@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import confetti from 'canvas-confetti';
+import Swal from 'sweetalert2';
 
 function MatchMaker({ players, onMatchResult }) {
     const [selectedIds, setSelectedIds] = useState([]);
@@ -10,6 +11,9 @@ function MatchMaker({ players, onMatchResult }) {
     // Estados do Modo Manual
     const [manualWinners, setManualWinners] = useState([]);
     const [manualLosers, setManualLosers] = useState([]);
+
+    // Persistência para agilizar novos sorteios
+    const [lastMatchTeams, setLastMatchTeams] = useState(null);
 
     const togglePlayer = (id) => {
         if (selectedIds.includes(id)) {
@@ -37,23 +41,72 @@ function MatchMaker({ players, onMatchResult }) {
         setMatchOngoing(true);
     };
 
-    const finishMatch = (winnerTeam) => {
-        if (winnerTeam === 'A') {
-            onMatchResult(teamA, teamB);
-        } else if (winnerTeam === 'B') {
-            onMatchResult(teamB, teamA);
-        }
-        // Reset state
+    const handleRepetir = () => {
+        if (!lastMatchTeams) return;
+        setTeamA(lastMatchTeams.teamA);
+        setTeamB(lastMatchTeams.teamB);
+        setMatchOngoing(true);
+    };
+
+    const finishMatch = async (winnerTeam) => {
+        const winTeam = winnerTeam === 'A' ? teamA : teamB;
+        const lossTeam = winnerTeam === 'A' ? teamB : teamA;
+        const teamLabel = winnerTeam === 'A' ? 'Time A' : 'Time B';
+
+        // Efeito de confete temático
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: winnerTeam === 'A' ? ['#00d2ff', '#ffffff'] : ['#ff00ea', '#ffffff']
+        });
+
+        // Feedback visual
+        await Swal.fire({
+            title: `Vitória do ${teamLabel}!`,
+            html: `Os pontos foram distribuídos.<br/><b>+ PDL para os vencedores!</b>`,
+            icon: 'success',
+            background: '#0a0e14',
+            color: '#f0e6d2',
+            confirmButtonColor: '#c89b3c',
+            timer: 2000,
+            showConfirmButton: false,
+            timerProgressBar: true
+        });
+
+        onMatchResult(winTeam, lossTeam);
+        
+        // Salva os times atuais para permitir repetição rápida
+        setLastMatchTeams({ teamA, teamB });
+        
+        // Reseta o estado da partida, mas MANTÉM os IDs selecionados para o próximo jogo
         setMatchOngoing(false);
         setTeamA([]);
         setTeamB([]);
-        setSelectedIds([]);
     };
 
-    const submitManualMatch = () => {
+    const submitManualMatch = async () => {
         if (manualWinners.length === 0 || manualLosers.length === 0) return;
         const winners = manualWinners.map(id => players.find(p => p.id === id));
         const losers = manualLosers.map(id => players.find(p => p.id === id));
+
+        confetti({
+            particleCount: 100,
+            spread: 50,
+            origin: { y: 0.6 }
+        });
+
+        await Swal.fire({
+            title: 'Partida Registrada!',
+            text: 'O ranking foi atualizado com sucesso.',
+            icon: 'success',
+            background: '#0a0e14',
+            color: '#f0e6d2',
+            confirmButtonColor: '#c89b3c',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
         onMatchResult(winners, losers);
         setIsManualMode(false);
         setManualWinners([]);
@@ -138,7 +191,12 @@ function MatchMaker({ players, onMatchResult }) {
                     </div>
                 </div>
 
-                <div className="match-actions">
+                <div className="match-actions" style={{ gap: '1rem' }}>
+                    <button className="btn sortear-btn" onClick={() => {
+                        const temp = [...teamA];
+                        setTeamA([...teamB]);
+                        setTeamB(temp);
+                    }}>🔄 Inverter Times</button>
                     <button className="btn cancel-btn" onClick={cancelMatch}>Cancelar Partida</button>
                 </div>
             </section>
@@ -198,7 +256,12 @@ function MatchMaker({ players, onMatchResult }) {
         <section className="matchmaker-section">
             <div className="matchmaker-header header-with-btn">
                 <h2>🏆 Criar Partida</h2>
-                <button className="btn purple-btn" onClick={() => setIsManualMode(true)}>Cadastrar Manual</button>
+                <div style={{ display: 'flex', gap: '0.8rem' }}>
+                    {selectedIds.length > 0 && (
+                        <button className="btn cancel-btn" style={{ padding: '0.5rem 1rem' }} onClick={() => setSelectedIds([])}>Limpar</button>
+                    )}
+                    <button className="btn purple-btn" onClick={() => setIsManualMode(true)}>Manual</button>
+                </div>
             </div>
 
             <div className="matchmaker-subtitle">
@@ -231,13 +294,26 @@ function MatchMaker({ players, onMatchResult }) {
                 </p>
             </div>
 
-            <button 
-                className="btn sortear-btn" 
-                disabled={selectedIds.length < 6 || selectedIds.length % 2 !== 0}
-                onClick={handleSortear}
-            >
-                🎲 Sortear Times
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+                <button 
+                    className="btn sortear-btn" 
+                    disabled={selectedIds.length < 6 || selectedIds.length % 2 !== 0}
+                    onClick={handleSortear}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                >
+                    🎲 Sortear Times
+                </button>
+
+                {lastMatchTeams && (
+                    <button 
+                        className="btn sortear-btn" 
+                        onClick={handleRepetir}
+                        style={{ background: 'rgba(200, 155, 60, 0.1)', borderColor: 'var(--primary-color)' }}
+                    >
+                        🔁 Repetir Última
+                    </button>
+                )}
+            </div>
         </section>
     );
 }
