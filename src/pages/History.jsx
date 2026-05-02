@@ -65,8 +65,18 @@ function History() {
                             {filteredHistory.map(match => (
                                 <tr key={match.id}>
                                     <td>{match.date}</td>
-                                    <td className="winrate-high">{match.winners.join(', ')}</td>
-                                    <td className="winrate-low">{match.losers.join(', ')}</td>
+                                    <td className="winrate-high">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span>{match.winners.join(', ')}</span>
+                                            {match.pontosGanhos && <span className="pdl-badge gain">+{match.pontosGanhos} PDL</span>}
+                                        </div>
+                                    </td>
+                                    <td className="winrate-low">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span>{match.losers.join(', ')}</span>
+                                            {match.pontosPerdidos && <span className="pdl-badge loss">-{match.pontosPerdidos} PDL</span>}
+                                        </div>
+                                    </td>
                                     <td>
                                         <span className="badge" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)' }}>
                                             👤 {match.createdBy || 'Sistema'}

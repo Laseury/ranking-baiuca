@@ -180,7 +180,6 @@ export const AppProvider = ({ children }) => {
 
             // Cálculo de Pontos (P): P = 18 + (1 - E) * 9
             const P = Math.round(18 + (1 - E) * 9);
-            const lossP = P - 3; // Ajuste recomendado da imagem: Derrota perde (P - 3)
 
             const updatePromises = [];
 
@@ -207,7 +206,7 @@ export const AppProvider = ({ children }) => {
                 updatePromises.push(updateDoc(playerRef, {
                     total: (p.total || 0) + 1,
                     derrotas: (p.derrotas || 0) + 1,
-                    rating: Math.max(0, currentRating - lossP),
+                    rating: Math.max(0, currentRating - P),
                     streak: newStreak
                 }));
             });
@@ -222,7 +221,7 @@ export const AppProvider = ({ children }) => {
                 winners: winners.map(w => w.name),
                 losers: losers.map(l => l.name),
                 pontosGanhos: P,
-                pontosPerdidos: lossP,
+                pontosPerdidos: P,
                 createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
