@@ -8,8 +8,17 @@ function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login, user } = useContext(AppContext);
+    const { login, user, players } = useContext(AppContext);
     const navigate = useNavigate();
+
+    // Encontrar o jogador #1 para o placeholder
+    const getTopPlayer = () => {
+        if (!players || players.length === 0) return 'Ministro';
+        const sorted = [...players].sort((a, b) => b.vitorias - a.vitorias);
+        return sorted[0]?.name || 'Ministro';
+    };
+
+    const topPlayer = getTopPlayer();
 
     useEffect(() => {
         if (user) {
@@ -22,7 +31,7 @@ function Login() {
         const success = await login(username, password);
         if (success) {
             const nome = username.split('@')[0];
-            
+
             Swal.fire({
                 title: 'Acesso Confirmado!',
                 text: `Bem-vindo de volta, ${nome}!`,
@@ -46,26 +55,26 @@ function Login() {
                 <div className="logo-glow"></div>
                 <h1 className="login-title">LEAGUE <span>OF</span> LEGENDS</h1>
                 <p className="subtitle">Ranking Competitivo</p>
-                
+
                 <form onSubmit={handleSubmit} className="login-form">
                     {error && <div className="error-msg">{error}</div>}
                     <div className="input-group">
-                        <label>E-mail da sua Conta Firebase</label>
-                        <input 
-                            type="email" 
-                            value={username} 
+                        <label>Usuário</label>
+                        <input
+                            type="text"
+                            value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="exemplo@email.com"
+                            placeholder={`Ex: ${topPlayer}`}
                             required
                         />
                     </div>
                     <div className="input-group">
                         <label>Senha</label>
-                        <input 
-                            type="password" 
-                            value={password} 
+                        <input
+                            type="password"
+                            value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Sua senha..."
+                            placeholder="Senha (ex: senha)"
                             required
                         />
                     </div>

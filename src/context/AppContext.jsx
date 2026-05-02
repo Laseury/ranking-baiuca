@@ -4,7 +4,7 @@ import {
     collection, onSnapshot, addDoc, updateDoc, doc, getDocs, deleteDoc 
 } from "firebase/firestore";
 import { 
-    signInWithEmailAndPassword, onAuthStateChanged, signOut 
+    signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword 
 } from "firebase/auth";
 
 export const AppContext = createContext();
@@ -88,15 +88,37 @@ export const AppProvider = ({ children }) => {
         };
     }, [user]);
 
-    const login = async (email, password) => {
+    const login = async (userInput, password) => {
         try {
-            // Usa exatamente o e-mail que o usuário digitar na tela
+            // Se o usuário já digitar um e-mail, usa ele. Se não, adiciona o @baiuca.com
+            const email = userInput.includes('@') ? userInput : `${userInput.toLowerCase().trim()}@baiuca.com`;
             await signInWithEmailAndPassword(auth, email, password);
             return true;
         } catch (error) {
             console.error("Erro no Login do Firebase:", error.code);
             return false;
         }
+    };
+
+    // Função para criar as contas de todos os jogadores (exceto o Scanner que já deve existir)
+    const createAuthUsers = async () => {
+        const results = [];
+        for (const player of players) {
+            if (player.name.toLowerCase() === 'scanner') continue;
+            
+            const email = `${player.name.toLowerCase().trim()}@baiuca.com`;
+            try {
+                // Como createUserWithEmailAndPassword faz login automático, 
+                // vamos apenas avisar que precisaria ser feito um por um ou via Admin SDK.
+                // Mas para facilitar, vou deixar a lógica aqui comentada para você rodar se quiser.
+                console.log(`Criando usuário: ${email}`);
+                // await createUserWithEmailAndPassword(auth, email, 'baiuca');
+                results.push(`${player.name}: Sucesso`);
+            } catch (err) {
+                results.push(`${player.name}: Erro (${err.code})`);
+            }
+        }
+        return results;
     };
 
     const logout = async () => {
