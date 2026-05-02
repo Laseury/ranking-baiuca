@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { getElo } from '../utils/elo';
@@ -9,6 +9,7 @@ function PlayerProfile() {
     const { players, history } = useContext(AppContext);
 
     const player = useMemo(() => players.find(p => p.name === name), [players, name]);
+    const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
     const stats = useMemo(() => {
         if (!player) return null;
@@ -51,12 +52,12 @@ function PlayerProfile() {
         <div className="fade-in container">
             <div className="profile-header glass-panel">
                 <div className="profile-avatar">{stats.elo.icon}</div>
-                <div className="profile-main-info">
+                <div className="profile-main-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h1>{player.name}</h1>
                     <span className={`elo-badge ${stats.elo.class}`} style={{ fontSize: '1rem' }}>
                         {stats.elo.name}
                     </span>
-                    <p className="subtitle" style={{ textAlign: 'left', marginTop: '0.5rem' }}>
+                    <p className="subtitle" style={{ marginTop: '0.5rem', width: '100%', textAlign: 'center' }}>
                         {player.rating || (1000 + (player.vitorias - player.derrotas) * 20)} PDL
                     </p>
                 </div>
@@ -113,37 +114,77 @@ function PlayerProfile() {
             </div>
 
             <section className="ranking-section">
-                <h2>📜 Histórico Pessoal</h2>
-                <div className="table-container glass-panel">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Resultado</th>
-                                <th>Aliados</th>
-                                <th>Oponentes</th>
-                                <th>Pontos</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div className="section-header" style={{ justifyContent: 'space-between' }}>
+                    <h2>📜 Histórico Pessoal</h2>
+                    <button 
+                        className="btn secondary-btn" 
+                        style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                        onClick={() => setIsMobileView(!isMobileView)}
+                    >
+                        {isMobileView ? 'Ver Modo Desktop 🖥️' : 'Ver Modo Mobile 📱'}
+                    </button>
+                </div>
+                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
+                    {isMobileView ? (
+                        <div className="player-cards-grid">
                             {stats.history.map(match => {
                                 const isWinner = match.winners.includes(player.name);
                                 return (
-                                    <tr key={match.id} className="player-row" style={{ opacity: 1, animation: 'none' }}>
-                                        <td>{match.date.split(' ')[0]}</td>
-                                        <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
-                                            {isWinner ? 'VITÓRIA' : 'DERROTA'}
-                                        </td>
-                                        <td>{isWinner ? match.winners.filter(n => n !== player.name).join(', ') : match.losers.filter(n => n !== player.name).join(', ')}</td>
-                                        <td>{isWinner ? match.losers.join(', ') : match.winners.join(', ')}</td>
-                                        <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
-                                            {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`}
-                                        </td>
-                                    </tr>
+                                    <div key={match.id} className={`player-card-mobile glass-panel ${isWinner ? 'win-border' : 'loss-border'}`}>
+                                        <div className="card-mobile-header">
+                                            <span className="date-col">{match.date.split(' ')[0]}</span>
+                                            <span className={isWinner ? 'winrate-high' : 'winrate-low'} style={{ fontWeight: '800' }}>
+                                                {isWinner ? 'VITÓRIA' : 'DERROTA'}
+                                            </span>
+                                            <span className={isWinner ? 'winrate-high' : 'winrate-low'} style={{ marginLeft: 'auto' }}>
+                                                {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`} PDL
+                                            </span>
+                                        </div>
+                                        <div className="card-mobile-stats">
+                                            <div className="stat-item">
+                                                <span className="label">ALIADOS</span>
+                                                <span className="value">{isWinner ? match.winners.filter(n => n !== player.name).join(', ') : match.losers.filter(n => n !== player.name).join(', ')}</span>
+                                            </div>
+                                            <div className="stat-item">
+                                                <span className="label">OPONENTES</span>
+                                                <span className="value">{isWinner ? match.losers.join(', ') : match.winners.join(', ')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 );
                             })}
-                        </tbody>
-                    </table>
+                        </div>
+                    ) : (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Resultado</th>
+                                    <th>Aliados</th>
+                                    <th>Oponentes</th>
+                                    <th>Pontos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stats.history.map(match => {
+                                    const isWinner = match.winners.includes(player.name);
+                                    return (
+                                        <tr key={match.id} className="player-row" style={{ opacity: 1, animation: 'none' }}>
+                                            <td>{match.date.split(' ')[0]}</td>
+                                            <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
+                                                {isWinner ? 'VITÓRIA' : 'DERROTA'}
+                                            </td>
+                                            <td>{isWinner ? match.winners.filter(n => n !== player.name).join(', ') : match.losers.filter(n => n !== player.name).join(', ')}</td>
+                                            <td>{isWinner ? match.losers.join(', ') : match.winners.join(', ')}</td>
+                                            <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
+                                                {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </section>
         </div>

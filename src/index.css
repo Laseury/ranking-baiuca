@@ -1149,7 +1149,13 @@ th {
 
   .player-card-mobile.rank-1 { border-left-color: #ffd700; background: rgba(255, 215, 0, 0.05) !important; }
   .player-card-mobile.rank-2 { border-left-color: #c0c0c0; background: rgba(192, 192, 192, 0.05) !important; }
-  .player-card-mobile.rank-3 { border-left-color: #cd7f32; background: rgba(205, 127, 50, 0.05) !important; }
+  .player-card-mobile.win-border { border-left-color: var(--win-color); background: rgba(0, 210, 106, 0.05) !important; }
+  .player-card-mobile.loss-border { border-left-color: var(--loss-color); background: rgba(248, 49, 47, 0.05) !important; }
+
+  .card-mobile-header .date-col {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
 
   .card-mobile-header {
     display: flex;
