@@ -1,0 +1,173 @@
+import React, { createContext, useState, useEffect } from 'react';
+import { db, auth } from '../firebase';
+import { 
+    collection, onSnapshot, addDoc, updateDoc, doc, getDocs, deleteDoc 
+} from "firebase/firestore";
+import { 
+    signInWithEmailAndPassword, onAuthStateChanged, signOut 
+} from "firebase/auth";
+
+export const AppContext = createContext();
+
+const defaultPlayers = [
+    { name: "Ministro", total: 11, vitorias: 9, derrotas: 2, streak: ["W", "W", "L", "W", "W"] },
+    { name: "Zethun", total: 21, vitorias: 13, derrotas: 8, streak: ["L", "W", "W", "W", "W"] },
+    { name: "Wyller", total: 21, vitorias: 12, derrotas: 9, streak: ["L", "W", "W", "L", "L"] },
+    { name: "AJR", total: 21, vitorias: 11, derrotas: 10, streak: ["W", "L", "W", "L", "L"] },
+    { name: "KalEl", total: 23, vitorias: 12, derrotas: 11, streak: ["L", "L", "L", "L", "W"] },
+    { name: "Scanner", total: 18, vitorias: 7, derrotas: 11, streak: ["W", "L", "L", "L", "W"] },
+    { name: "Riquelmer45", total: 14, vitorias: 5, derrotas: 9, streak: ["W", "L", "L", "L", "W"] },
+    { name: "Alwz", total: 21, vitorias: 7, derrotas: 14, streak: ["W", "L", "W", "L", "L"] },
+    { name: "Spotovite", total: 13, vitorias: 4, derrotas: 9, streak: ["L", "L", "L", "W", "L"] },
+    { name: "Condottyery", total: 10, vitorias: 3, derrotas: 7, streak: ["W", "L", "L", "L", "W"] },
+    { name: "Roisfe", total: 0, vitorias: 0, derrotas: 0, streak: [] }
+];
+
+export const AppProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [players, setPlayers] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const cleanupDuplicates = async () => {
+            try {
+                const snapshot = await getDocs(collection(db, "players"));
+                const seen = new Set();
+                for (const docSnapshot of snapshot.docs) {
+                    const name = docSnapshot.data().name;
+                    if (seen.has(name)) {
+                        console.log("Deletando duplicata:", name);
+                        await deleteDoc(doc(db, "players", docSnapshot.id));
+                    } else {
+                        seen.add(name);
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao limpar DB:", error);
+            }
+        };
+        cleanupDuplicates();
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!user) {
+            setPlayers([]);
+            setHistory([]);
+            return;
+        }
+
+        const unsubPlayers = onSnapshot(collection(db, "players"), (snapshot) => {
+            const playersData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setPlayers(playersData);
+        });
+
+        const unsubHistory = onSnapshot(collection(db, "history"), (snapshot) => {
+            const historyData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            historyData.sort((a, b) => b.timestamp - a.timestamp);
+            setHistory(historyData);
+        });
+
+        return () => {
+            unsubPlayers();
+            unsubHistory();
+        };
+    }, [user]);
+
+    const login = async (email, password) => {
+        try {
+            // Usa exatamente o e-mail que o usuário digitar na tela
+            await signInWithEmailAndPassword(auth, email, password);
+            return true;
+        } catch (error) {
+            console.error("Erro no Login do Firebase:", error.code);
+            return false;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+        } catch(error) {
+            setUser(null);
+        }
+    };
+
+    const addPlayer = async (name) => {
+        const newPlayer = {
+            name,
+            total: 0,
+            vitorias: 0,
+            derrotas: 0,
+            streak: []
+        };
+        try {
+            await addDoc(collection(db, "players"), newPlayer);
+        } catch(error) {
+            console.error("Erro ao add jogador", error);
+        }
+    };
+
+    const handleMatchResult = async (winners, losers) => {
+        try {
+            const updatePromises = [];
+
+            winners.forEach(p => {
+                const newStreak = [...p.streak, "W"];
+                if(newStreak.length > 5) newStreak.shift();
+                
+                const playerRef = doc(db, "players", p.id);
+                updatePromises.push(updateDoc(playerRef, {
+                    total: p.total + 1,
+                    vitorias: p.vitorias + 1,
+                    streak: newStreak
+                }));
+            });
+
+            losers.forEach(p => {
+                const newStreak = [...p.streak, "L"];
+                if(newStreak.length > 5) newStreak.shift();
+
+                const playerRef = doc(db, "players", p.id);
+                updatePromises.push(updateDoc(playerRef, {
+                    total: p.total + 1,
+                    derrotas: p.derrotas + 1,
+                    streak: newStreak
+                }));
+            });
+
+            await Promise.all(updatePromises);
+
+            const newMatch = {
+                date: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
+                timestamp: Date.now(),
+                winners: winners.map(w => w.name),
+                losers: losers.map(l => l.name)
+            };
+            await addDoc(collection(db, "history"), newMatch);
+
+        } catch(error) {
+            console.error("Erro ao registrar partida", error);
+        }
+    };
+
+    return (
+        <AppContext.Provider value={{ user, loading, login, logout, players, history, handleMatchResult, addPlayer }}>
+            {!loading && children}
+        </AppContext.Provider>
+    );
+};
