@@ -26,8 +26,8 @@ function Navbar() {
                 <Link to="/new-player" className={location.pathname === '/new-player' ? 'active' : ''}>Novo Jogador</Link>
             </div>
             <div className="nav-user">
-                <span>Olá, {user.email?.split('@')[0] || 'Usuário'}</span>
-                <button onClick={handleLogout} className="btn cancel-btn">Sair</button>
+                <span className="user-greeting">Olá, {user.email?.split('@')[0] || 'Usuário'}</span>
+                <button onClick={handleLogout} className="btn logout-btn">Sair</button>
             </div>
         </nav>
     );
