@@ -64,7 +64,24 @@ function Ranking() {
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
 
     useEffect(() => {
-        const processedPlayers = processPlayersBySeason(players, history, selectedSeason);
+        let processedPlayers;
+
+        if (selectedSeason === CURRENT_SEASON) {
+            // Para a temporada atual, usamos os dados 'Live' do Firestore que já incluem a migração inicial
+            processedPlayers = players.map(p => {
+                const winrate = p.total > 0 ? ((p.vitorias / p.total) * 100).toFixed(1) : 0;
+                const rating = p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
+                return {
+                    ...p,
+                    winrate: parseFloat(winrate),
+                    pontos: rating,
+                    elo: getElo(rating)
+                };
+            });
+        } else {
+            // Para outras temporadas, recalculamos do zero a partir do histórico
+            processedPlayers = processPlayersBySeason(players, history, selectedSeason);
+        }
 
         processedPlayers.sort((a, b) => {
             if (b.pontos !== a.pontos) {
