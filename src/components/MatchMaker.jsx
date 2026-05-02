@@ -86,6 +86,19 @@ function MatchMaker({ players, onMatchResult }) {
         }
     };
 
+    const getRating = (p) => p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
+    
+    const mmrA = teamA.length > 0 ? Math.round(teamA.reduce((sum, p) => sum + getRating(p), 0) / teamA.length) : 0;
+    const mmrB = teamB.length > 0 ? Math.round(teamB.reduce((sum, p) => sum + getRating(p), 0) / teamB.length) : 0;
+    
+    // Chance de vitória do Time A
+    const expA = (mmrB - mmrA) / 800;
+    const chanceA = teamA.length > 0 ? (1 / (1 + Math.pow(10, expA)) * 100).toFixed(1) : 0;
+    
+    // Chance de vitória do Time B
+    const expB = (mmrA - mmrB) / 800;
+    const chanceB = teamB.length > 0 ? (1 / (1 + Math.pow(10, expB)) * 100).toFixed(1) : 0;
+
     if (matchOngoing) {
         return (
             <section className="matchmaker-section glass-panel">
@@ -95,9 +108,15 @@ function MatchMaker({ players, onMatchResult }) {
                 
                 <div className="teams-container">
                     <div className="team team-a">
-                        <h3>Time A</h3>
+                        <div className="team-info-header">
+                            <h3>Time A</h3>
+                            <div className="team-stats">
+                                <span className="team-mmr">MMR Médio: {mmrA}</span>
+                                <span className="team-chance">Chance: {chanceA}%</span>
+                            </div>
+                        </div>
                         <ul className="team-list">
-                            {teamA.map(p => <li key={p.id}>{p.name}</li>)}
+                            {teamA.map(p => <li key={p.id}>{p.name} <span className="player-rating-small">({getRating(p)})</span></li>)}
                         </ul>
                         <button className="btn win-btn" onClick={() => finishMatch('A')}>Time A Venceu</button>
                     </div>
@@ -105,9 +124,15 @@ function MatchMaker({ players, onMatchResult }) {
                     <div className="vs-badge">VS</div>
 
                     <div className="team team-b">
-                        <h3>Time B</h3>
+                        <div className="team-info-header">
+                            <h3>Time B</h3>
+                            <div className="team-stats">
+                                <span className="team-mmr">MMR Médio: {mmrB}</span>
+                                <span className="team-chance">Chance: {chanceB}%</span>
+                            </div>
+                        </div>
                         <ul className="team-list">
-                            {teamB.map(p => <li key={p.id}>{p.name}</li>)}
+                            {teamB.map(p => <li key={p.id}>{p.name} <span className="player-rating-small">({getRating(p)})</span></li>)}
                         </ul>
                         <button className="btn win-btn" onClick={() => finishMatch('B')}>Time B Venceu</button>
                     </div>

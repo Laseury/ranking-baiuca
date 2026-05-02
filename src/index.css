@@ -756,3 +756,50 @@ th {
 .player-card.selected-loss h4 {
   color: var(--loss-color);
 }
+
+.team-info-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.1);
+  text-align: center;
+}
+
+.team-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.team-mmr, .team-chance {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.team-chance {
+  color: var(--primary-color);
+  border-color: rgba(200, 155, 60, 0.2);
+}
+
+.player-rating-small {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+}
+
+.team-a h3 {
+  color: #00d2ff;
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+
+.team-b h3 {
+  color: #ff00ea;
+  text-shadow: 0 0 10px rgba(255, 0, 234, 0.3);
+}
