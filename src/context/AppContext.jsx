@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { 
-    collection, onSnapshot, addDoc, updateDoc, doc, getDocs, deleteDoc 
+    collection, onSnapshot, addDoc, updateDoc, doc, getDocs, deleteDoc, setDoc, getDoc 
 } from "firebase/firestore";
 import { 
     signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword 
@@ -23,13 +23,12 @@ const defaultPlayers = [
     { name: "Roisfe", total: 0, vitorias: 0, derrotas: 0, streak: [] }
 ];
 
-export const CURRENT_SEASON = 'Season 1';
-
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [players, setPlayers] = useState([]);
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentSeason, setCurrentSeason] = useState("Season 1");
 
     useEffect(() => {
         const cleanupDuplicates = async () => {
@@ -57,8 +56,27 @@ export const AppProvider = ({ children }) => {
             setUser(currentUser);
             setLoading(false);
         });
-        return () => unsubscribe();
+
+        // Monitorar Config (Temporada Atual)
+        const configRef = doc(db, "config", "season_settings");
+        const unsubConfig = onSnapshot(configRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setCurrentSeason(docSnap.data().currentSeason || "Season 1");
+            } else {
+                setDoc(configRef, { currentSeason: "Season 1" });
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            unsubConfig();
+        };
     }, []);
+
+    const changeSeason = async (newSeason) => {
+        const configRef = doc(db, "config", "season_settings");
+        await setDoc(configRef, { currentSeason: newSeason });
+    };
 
     useEffect(() => {
         if (!user) {
@@ -224,7 +242,7 @@ export const AppProvider = ({ children }) => {
                 losers: losers.map(l => l.name),
                 pontosGanhos: P,
                 pontosPerdidos: P,
-                season: CURRENT_SEASON,
+                season: currentSeason,
                 createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
@@ -235,7 +253,18 @@ export const AppProvider = ({ children }) => {
     };
 
     return (
-        <AppContext.Provider value={{ user, loading, login, logout, players, history, handleMatchResult, addPlayer }}>
+        <AppContext.Provider value={{ 
+            user, 
+            loading, 
+            login, 
+            logout, 
+            players, 
+            history, 
+            handleMatchResult, 
+            addPlayer,
+            currentSeason,
+            changeSeason
+        }}>
             {!loading && children}
         </AppContext.Provider>
     );
