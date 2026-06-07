@@ -1,21 +1,38 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { getElo } from '../utils/elo';
 import Streak from '../components/Streak';
+import { getPlayersForSeason, getSeasonOptions } from '../utils/season';
 
 function PlayerProfile() {
     const { name } = useParams();
-    const { players, history } = useContext(AppContext);
+    const { players, history, currentSeason } = useContext(AppContext);
 
-    const player = useMemo(() => players.find(p => p.name === name), [players, name]);
+    const [selectedSeason, setSelectedSeason] = useState("Season 1");
     const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        if (currentSeason) {
+            setSelectedSeason(currentSeason);
+        }
+    }, [currentSeason]);
+
+    const seasonPlayers = useMemo(() => {
+        return getPlayersForSeason(players, history, selectedSeason, currentSeason);
+    }, [players, history, selectedSeason, currentSeason]);
+
+    const player = useMemo(() => seasonPlayers.find(p => p.name === name), [seasonPlayers, name]);
 
     const stats = useMemo(() => {
         if (!player) return null;
 
-        const playerHistory = history.filter(h => h.winners.includes(name) || h.losers.includes(name));
-        const winrate = playerHistory.length > 0 ? (history.filter(h => h.winners.includes(name)).length / playerHistory.length * 100).toFixed(1) : 0;
+        const seasonMatches = history.filter(m => 
+            m.season === selectedSeason || (!m.season && selectedSeason === 'Season 1')
+        );
+
+        const playerHistory = seasonMatches.filter(h => h.winners.includes(name) || h.losers.includes(name));
+        const winrate = playerHistory.length > 0 ? (playerHistory.filter(h => h.winners.includes(name)).length / playerHistory.length * 100).toFixed(1) : 0;
         
         // Calcular Aliados e Rivais
         const allies = {};
@@ -42,9 +59,9 @@ function PlayerProfile() {
             winrate,
             allies: sortedAllies,
             rivals: sortedRivals,
-            elo: getElo(player.rating || (1000 + (player.vitorias - player.derrotas) * 20))
+            elo: getElo(player.rating !== undefined ? player.rating : 1000)
         };
-    }, [player, history, name]);
+    }, [player, history, name, selectedSeason]);
 
     if (!player) return <div className="container">Jogador não encontrado.</div>;
 
@@ -58,8 +75,20 @@ function PlayerProfile() {
                         {stats.elo.name}
                     </span>
                     <p className="subtitle" style={{ marginTop: '0.5rem', width: '100%', textAlign: 'center' }}>
-                        {player.rating || (1000 + (player.vitorias - player.derrotas) * 20)} PDL
+                        {player.rating !== undefined ? player.rating : 1000} PDL
                     </p>
+                </div>
+                <div className="season-selector" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '160px' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        Temporada
+                    </label>
+                    <select value={selectedSeason} onChange={(e) => setSelectedSeason(e.target.value)}>
+                        {getSeasonOptions(currentSeason).map(season => (
+                            <option key={season} value={season}>
+                                {season.replace('Season', 'Temporada')}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -125,7 +154,9 @@ function PlayerProfile() {
                     </button>
                 </div>
                 <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    {isMobileView ? (
+                    {stats.history.length === 0 ? (
+                        <div className="empty-state">Nenhuma partida jogada nesta temporada.</div>
+                    ) : isMobileView ? (
                         <div className="player-cards-grid">
                             {stats.history.map(match => {
                                 const isWinner = match.winners.includes(player.name);

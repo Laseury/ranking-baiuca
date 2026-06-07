@@ -23,6 +23,7 @@ function Navbar() {
                 <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Ranking</Link>
                 <Link to="/matchmaker" className={location.pathname === '/matchmaker' ? 'active' : ''}>Organizar Partida</Link>
                 <Link to="/history" className={location.pathname === '/history' ? 'active' : ''}>Histórico</Link>
+                <Link to="/compare" className={location.pathname === '/compare' ? 'active' : ''}>Comparar</Link>
                 <Link to="/new-player" className={location.pathname === '/new-player' ? 'active' : ''}>Novo Jogador</Link>
             </div>
             <div className="nav-user">

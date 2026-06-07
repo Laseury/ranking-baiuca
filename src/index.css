@@ -954,6 +954,10 @@ th {
   padding: 2rem;
 }
 
+.profile-header .season-selector {
+  margin-left: auto;
+}
+
 .profile-avatar {
   width: 120px;
   height: 120px;
@@ -1063,6 +1067,12 @@ th {
     text-align: center;
     gap: 1rem;
     padding: 1.5rem;
+  }
+
+  .profile-header .season-selector {
+    margin-left: 0;
+    margin-top: 1rem;
+    width: 100%;
   }
 
   .profile-avatar {

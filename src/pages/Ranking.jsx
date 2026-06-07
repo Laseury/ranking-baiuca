@@ -1,60 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
-import { getElo } from '../utils/elo';
-
-function processPlayersBySeason(players, history, selectedSeason) {
-    // 1. Inicializa estatísticas da temporada para todos os jogadores
-    const seasonStats = {};
-    players.forEach(p => {
-        seasonStats[p.name] = {
-            ...p,
-            vitorias: 0,
-            derrotas: 0,
-            total: 0,
-            rating: 1000,
-            streak: []
-        };
-    });
-
-    // 2. Filtra o histórico pela temporada selecionada
-    // Se a partida não tiver season, assumimos Season 1
-    const seasonMatches = history.filter(m => 
-        m.season === selectedSeason || (!m.season && selectedSeason === 'Season 1')
-    );
-
-    // 3. Recalcula estatísticas a partir das partidas (em ordem cronológica)
-    [...seasonMatches].sort((a, b) => a.timestamp - b.timestamp).forEach(match => {
-        match.winners.forEach(name => {
-            if (seasonStats[name]) {
-                seasonStats[name].vitorias++;
-                seasonStats[name].total++;
-                seasonStats[name].rating += (match.pontosGanhos || 20);
-                seasonStats[name].streak = [...(seasonStats[name].streak || []), "W"].slice(-5);
-            }
-        });
-        match.losers.forEach(name => {
-            if (seasonStats[name]) {
-                seasonStats[name].derrotas++;
-                seasonStats[name].total++;
-                seasonStats[name].rating = Math.max(0, seasonStats[name].rating - (match.pontosPerdidos || 20));
-                seasonStats[name].streak = [...(seasonStats[name].streak || []), "L"].slice(-5);
-            }
-        });
-    });
-
-    // 4. Formata dados finais e calcula Elos
-    return Object.values(seasonStats).map(player => {
-        const winrate = player.total > 0 ? ((player.vitorias / player.total) * 100).toFixed(1) : 0;
-        const elo = getElo(player.rating);
-        return {
-            ...player,
-            winrate: parseFloat(winrate),
-            pontos: player.rating,
-            elo
-        };
-    });
-}
+import { getPlayersForSeason, getSeasonOptions } from '../utils/season';
 
 import Swal from 'sweetalert2';
 
@@ -79,24 +26,7 @@ function Ranking() {
     }, [currentSeason]);
 
     useEffect(() => {
-        let processedPlayers;
-
-        if (selectedSeason === currentSeason && selectedSeason === "Season 1") {
-            // Caso especial para a Temporada 1 original manter os pontos migrados
-            processedPlayers = players.map(p => {
-                const winrate = p.total > 0 ? ((p.vitorias / p.total) * 100).toFixed(1) : 0;
-                const rating = p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
-                return {
-                    ...p,
-                    winrate: parseFloat(winrate),
-                    pontos: rating,
-                    elo: getElo(rating)
-                };
-            });
-        } else {
-            // Para novas temporadas ou consulta de históricas, recalcula do zero a partir do histórico
-            processedPlayers = processPlayersBySeason(players, history, selectedSeason);
-        }
+        let processedPlayers = getPlayersForSeason(players, history, selectedSeason, currentSeason);
 
         processedPlayers.sort((a, b) => {
             if (b.pontos !== a.pontos) {
@@ -144,8 +74,11 @@ function Ranking() {
                     <p className="subtitle">Ranking Competitivo</p>
                     <div className="season-selector" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <select value={selectedSeason} onChange={(e) => setSelectedSeason(e.target.value)}>
-                            <option value="Season 1">Temporada 1</option>
-                            {currentSeason !== "Season 1" && <option value={currentSeason}>{currentSeason.replace('Season', 'Temporada')}</option>}
+                            {getSeasonOptions(currentSeason).map(season => (
+                                <option key={season} value={season}>
+                                    {season.replace('Season', 'Temporada')}
+                                </option>
+                            ))}
                         </select>
                         <button className="btn purple-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }} onClick={handleNextSeason}>
                             Nova Temp.

@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import Swal from 'sweetalert2';
 
+const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+};
+
 function MatchMaker({ players, onMatchResult }) {
     const [selectedIds, setSelectedIds] = useState([]);
     const [teamA, setTeamA] = useState([]);
@@ -15,6 +24,7 @@ function MatchMaker({ players, onMatchResult }) {
 
     // Persistência para agilizar novos sorteios
     const [lastMatchTeams, setLastMatchTeams] = useState(null);
+    const [drawMethod, setDrawMethod] = useState(null);
 
     const togglePlayer = (id) => {
         if (selectedIds.includes(id)) {
@@ -31,14 +41,88 @@ function MatchMaker({ players, onMatchResult }) {
         if (selectedIds.length < 6 || selectedIds.length % 2 !== 0) return;
 
         // Shuffle
-        const shuffled = [...selectedIds].sort(() => 0.5 - Math.random());
+        const shuffled = shuffleArray(selectedIds);
         
         const half = Math.floor(shuffled.length / 2);
         const tA = shuffled.slice(0, half).map(id => players.find(p => p.id === id));
         const tB = shuffled.slice(half).map(id => players.find(p => p.id === id));
 
-        setTeamA(tA);
-        setTeamB(tB);
+        setTeamA(shuffleArray(tA));
+        setTeamB(shuffleArray(tB));
+        setDrawMethod('puro');
+        setMatchOngoing(true);
+    };
+
+    const handleSortearEquilibrado = () => {
+        if (selectedIds.length < 6 || selectedIds.length % 2 !== 0) return;
+
+        const selectedPlayers = selectedIds.map(id => players.find(p => p.id === id));
+        
+        // Geração de todas as combinações possíveis de tamanho k
+        function getCombinations(array, k) {
+            const result = [];
+            function helper(start, combo) {
+                if (combo.length === k) {
+                    result.push([...combo]);
+                    return;
+                }
+                for (let i = start; i < array.length; i++) {
+                    combo.push(array[i]);
+                    helper(i + 1, combo);
+                    combo.pop();
+                }
+            }
+            helper(0, []);
+            return result;
+        }
+
+        const teamSize = selectedPlayers.length / 2;
+        const combos = getCombinations(selectedPlayers, teamSize);
+        const uniquePartitions = [];
+        const seenKeys = new Set();
+
+        for (const teamA of combos) {
+            const teamB = selectedPlayers.filter(p => !teamA.some(ta => ta.id === p.id));
+            
+            // Chave de ordenação independente para evitar duplicados espelhados (Time A vs B === B vs A)
+            const idA = teamA.map(p => p.id).sort().join(',');
+            const idB = teamB.map(p => p.id).sort().join(',');
+            const key = [idA, idB].sort().join('|');
+
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                const sumA = teamA.reduce((sum, p) => sum + getRating(p), 0);
+                const sumB = teamB.reduce((sum, p) => sum + getRating(p), 0);
+                uniquePartitions.push({
+                    teamA,
+                    teamB,
+                    diff: Math.abs(sumA - sumB)
+                });
+            }
+        }
+
+        // Shuffle partitions first to randomize ties with the same 'diff'
+        const shuffledPartitions = shuffleArray(uniquePartitions);
+        shuffledPartitions.sort((a, b) => a.diff - b.diff);
+
+        // Escolher aleatoriamente entre as top 5 combinações mais equilibradas para manter o fator surpresa
+        const poolLimit = Math.min(5, shuffledPartitions.length);
+        const randomIndex = Math.floor(Math.random() * poolLimit);
+        const bestPartition = shuffledPartitions[randomIndex];
+
+        // Sorteia quem exibe como Time A e Time B, and shuffle players within teams
+        const finalTeamA = shuffleArray(bestPartition.teamA);
+        const finalTeamB = shuffleArray(bestPartition.teamB);
+
+        if (Math.random() > 0.5) {
+            setTeamA(finalTeamA);
+            setTeamB(finalTeamB);
+        } else {
+            setTeamA(finalTeamB);
+            setTeamB(finalTeamA);
+        }
+        
+        setDrawMethod('equilibrado');
         setMatchOngoing(true);
     };
 
@@ -156,8 +240,22 @@ function MatchMaker({ players, onMatchResult }) {
     if (matchOngoing) {
         return (
             <section className="matchmaker-section glass-panel">
-                <div className="matchmaker-header">
+                <div className="matchmaker-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem' }}>
                     <h2>⚔️ Partida em Andamento</h2>
+                    {drawMethod && (
+                        <span className="draw-method-badge" style={{
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '20px',
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold',
+                            background: drawMethod === 'equilibrado' ? 'rgba(200, 155, 60, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                            border: drawMethod === 'equilibrado' ? '1px solid var(--primary-color)' : '1px solid rgba(255, 255, 255, 0.2)',
+                            color: drawMethod === 'equilibrado' ? 'var(--primary-color)' : '#ffffff',
+                            textShadow: '0 0 10px rgba(0,0,0,0.5)'
+                        }}>
+                            {drawMethod === 'equilibrado' ? '⚖️ Equilibrado (PDL)' : '🎲 Sorteio Puro'}
+                        </span>
+                    )}
                 </div>
                 
                 <div className="teams-container">
@@ -295,21 +393,30 @@ function MatchMaker({ players, onMatchResult }) {
                 </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', width: '100%' }}>
                 <button 
                     className="btn sortear-btn" 
                     disabled={selectedIds.length < 6 || selectedIds.length % 2 !== 0}
                     onClick={handleSortear}
-                    style={{ flex: 1, justifyContent: 'center' }}
+                    style={{ flex: 1, minWidth: '160px', justifyContent: 'center', background: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }}
                 >
-                    🎲 Sortear Times
+                    🎲 Sorteio Puro
+                </button>
+
+                <button 
+                    className="btn sortear-btn" 
+                    disabled={selectedIds.length < 6 || selectedIds.length % 2 !== 0}
+                    onClick={handleSortearEquilibrado}
+                    style={{ flex: 1.2, minWidth: '180px', justifyContent: 'center', background: 'var(--primary-color)', color: '#0a0e14', fontWeight: 'bold' }}
+                >
+                    ⚖️ Sorteio Equilibrado
                 </button>
 
                 {lastMatchTeams && (
                     <button 
                         className="btn sortear-btn" 
                         onClick={handleRepetir}
-                        style={{ background: 'rgba(200, 155, 60, 0.1)', borderColor: 'var(--primary-color)' }}
+                        style={{ minWidth: '140px', background: 'rgba(200, 155, 60, 0.1)', borderColor: 'var(--primary-color)' }}
                     >
                         🔁 Repetir Última
                     </button>
