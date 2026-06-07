@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
-import { getPlayersForSeason, getSeasonOptions } from '../utils/season';
+import { getPlayersForSeason, getSeasonOptions, calculateRankingTrend } from '../utils/season';
 
 import Swal from 'sweetalert2';
 
@@ -11,6 +11,46 @@ function Ranking() {
     const [officialPlayers, setOfficialPlayers] = useState([]);
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
     const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+    // Calculate ranking trend map
+    const trends = useMemo(() => {
+        let processedPlayers = getPlayersForSeason(players, history, selectedSeason, currentSeason);
+        processedPlayers.sort((a, b) => {
+            if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+            return b.winrate - a.winrate;
+        });
+        return calculateRankingTrend(players, history, selectedSeason, processedPlayers);
+    }, [players, history, selectedSeason, currentSeason]);
+
+    // Calculate champions dynamically for Hall of Fame
+    const champions = useMemo(() => {
+        const seasonOptions = getSeasonOptions(currentSeason);
+        const list = [];
+        seasonOptions.forEach(season => {
+            const seasonMatches = history.filter(m => 
+                m.season === season || (!m.season && season === 'Season 1')
+            );
+            if (seasonMatches.length > 0) {
+                const processed = getPlayersForSeason(players, history, season, currentSeason);
+                processed.sort((a, b) => {
+                    if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+                    return b.winrate - a.winrate;
+                });
+                const champ = processed[0];
+                if (champ && champ.total > 0) {
+                    list.push({
+                        season: season.replace('Season', 'Temporada'),
+                        name: champ.name,
+                        pdl: champ.pontos,
+                        winrate: champ.winrate,
+                        total: champ.total,
+                        elo: champ.elo
+                    });
+                }
+            }
+        });
+        return list;
+    }, [players, history, currentSeason]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -127,13 +167,52 @@ function Ranking() {
                 )}
             </div>
 
+            {champions.length > 0 && (
+                <section className="ranking-section hall-of-fame-section">
+                    <div className="section-header">
+                        <h2>🏆 Galeria de Campeões (Hall da Fama)</h2>
+                        <span className="badge">Histórico</span>
+                    </div>
+                    <div className="hall-of-fame-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
+                        {champions.map((champ, index) => (
+                            <div key={index} className="dashboard-card glass-panel hall-of-fame-card" style={{
+                                animation: 'none',
+                                borderTop: '3px solid #ffd700',
+                                boxShadow: '0 0 15px rgba(255, 215, 0, 0.15)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                padding: '1.5rem',
+                                gap: '0.8rem'
+                            }}>
+                                <div style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.5))' }}>🏆</div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <h5 style={{ color: '#ffd700', fontWeight: 'bold', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.2rem' }}>
+                                        {champ.season}
+                                    </h5>
+                                    <span className="card-value" style={{ fontSize: '1.4rem', textShadow: '0 0 8px rgba(255, 215, 0, 0.5)' }}>{champ.name}</span>
+                                    <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                        <span className="badge" style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', background: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', borderColor: '#ffd700' }}>
+                                            {champ.pdl} PDL
+                                        </span>
+                                        <span className="badge warning" style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem' }}>
+                                            {champ.winrate}% WR
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             <section className="ranking-section">
                 <div className="section-header">
                     <h2>Ranking Oficial</h2>
                     <span className="badge">10+ Partidas</span>
                 </div>
                 <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={officialPlayers} isOfficial={true} isMobileView={isMobileView} />
+                    <RankingTable players={officialPlayers} isOfficial={true} isMobileView={isMobileView} trends={trends} />
                 </div>
             </section>
 
@@ -143,7 +222,7 @@ function Ranking() {
                     <span className="badge warning">Menos de 10 Partidas</span>
                 </div>
                 <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={provisionalPlayers} isOfficial={false} isMobileView={isMobileView} />
+                    <RankingTable players={provisionalPlayers} isOfficial={false} isMobileView={isMobileView} trends={trends} />
                 </div>
             </section>
         </div>

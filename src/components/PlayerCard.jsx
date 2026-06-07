@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import Streak from './Streak';
+import { AppContext } from '../context/AppContext';
+import { calculateAchievements } from '../utils/season';
 
-function PlayerCard({ player, index, isOfficial }) {
+function PlayerCard({ player, index, isOfficial, trend, playersList }) {
+    const { history, currentSeason } = useContext(AppContext);
     const winrateClass = player.winrate >= 50 ? 'winrate-high' : 'winrate-low';
     const animationDelay = `${index * 0.05}s`;
     
@@ -11,13 +14,30 @@ function PlayerCard({ player, index, isOfficial }) {
         rankClass = `rank-${index + 1}`;
     }
 
+    const badges = calculateAchievements(player, playersList, history, currentSeason);
+
+    const renderTrend = () => {
+        if (!trend || trend === 0) return <span className="trend-no-change" title="Sem alteração de posição">➖</span>;
+        if (trend > 0) return <span className="trend-up" title={`Subiu ${trend} posições`}>▲ {trend}</span>;
+        return <span className="trend-down" title={`Desceu ${Math.abs(trend)} posições`}>▼ {Math.abs(trend)}</span>;
+    };
+
     return (
         <div className={`player-card-mobile glass-panel ${rankClass}`} style={{ animationDelay }}>
             <div className="card-mobile-header">
-                <span className="rank-col">#{index + 1}</span>
-                <Link to={`/player/${player.name}`} className="player-link">
-                    {player.name}
-                </Link>
+                <span className="rank-col" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {renderTrend()} #{index + 1}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1 }}>
+                    <Link to={`/player/${player.name}`} className="player-link">
+                        {player.name}
+                    </Link>
+                    {badges.map(badge => (
+                        <span key={badge.id} className="achievement-badge" title={`${badge.name}: ${badge.desc}`} style={{ cursor: 'help' }}>
+                            {badge.icon}
+                        </span>
+                    ))}
+                </div>
                 <span className={`elo-badge ${player.elo?.class || 'elo-iron'}`}>
                     {player.elo?.icon || '⚙️'} {player.elo?.name || 'Ferro'}
                 </span>

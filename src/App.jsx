@@ -8,6 +8,7 @@ import MatchMakerPage from './pages/MatchMakerPage';
 import History from './pages/History';
 import NewPlayer from './pages/NewPlayer';
 import PlayerProfile from './pages/PlayerProfile';
+import ComparePlayers from './pages/ComparePlayers';
 import './App.css';
 
 // Componente para proteger as rotas
@@ -42,6 +43,11 @@ function AppContent() {
                         <Route path="/new-player" element={
                             <PrivateRoute>
                                 <NewPlayer />
+                            </PrivateRoute>
+                        } />
+                        <Route path="/compare" element={
+                            <PrivateRoute>
+                                <ComparePlayers />
                             </PrivateRoute>
                         } />
                         <Route path="/player/:name" element={

@@ -2,7 +2,7 @@ import React from 'react';
 import PlayerRow from './PlayerRow';
 import PlayerCard from './PlayerCard';
 
-function RankingTable({ players, isOfficial, isMobileView }) {
+function RankingTable({ players, isOfficial, isMobileView, trends }) {
     if (players.length === 0) {
         return <div className="empty-state">Nenhum jogador nesta categoria.</div>;
     }
@@ -16,6 +16,8 @@ function RankingTable({ players, isOfficial, isMobileView }) {
                         player={player} 
                         index={index} 
                         isOfficial={isOfficial} 
+                        trend={trends ? trends[player.name] : 0}
+                        playersList={players}
                     />
                 ))}
             </div>
@@ -43,6 +45,8 @@ function RankingTable({ players, isOfficial, isMobileView }) {
                         player={player} 
                         index={index} 
                         isOfficial={isOfficial} 
+                        trend={trends ? trends[player.name] : 0}
+                        playersList={players}
                     />
                 ))}
             </tbody>

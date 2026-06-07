@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { getElo } from '../utils/elo';
 import Streak from '../components/Streak';
-import { getPlayersForSeason, getSeasonOptions } from '../utils/season';
+import { getPlayersForSeason, getSeasonOptions, calculateAchievements } from '../utils/season';
+import PDLChart from '../components/PDLChart';
 
 function PlayerProfile() {
     const { name } = useParams();
@@ -23,6 +24,11 @@ function PlayerProfile() {
     }, [players, history, selectedSeason, currentSeason]);
 
     const player = useMemo(() => seasonPlayers.find(p => p.name === name), [seasonPlayers, name]);
+
+    const badges = useMemo(() => {
+        if (!player) return [];
+        return calculateAchievements(player, seasonPlayers, history, selectedSeason);
+    }, [player, seasonPlayers, history, selectedSeason]);
 
     const stats = useMemo(() => {
         if (!player) return null;
@@ -70,8 +76,17 @@ function PlayerProfile() {
             <div className="profile-header glass-panel">
                 <div className="profile-avatar">{stats.elo.icon}</div>
                 <div className="profile-main-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h1>{player.name}</h1>
-                    <span className={`elo-badge ${stats.elo.class}`} style={{ fontSize: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <h1 style={{ margin: 0 }}>{player.name}</h1>
+                        <div style={{ display: 'inline-flex', gap: '0.4rem' }}>
+                            {badges.map(badge => (
+                                <span key={badge.id} className="achievement-badge" title={`${badge.name}: ${badge.desc}`} style={{ fontSize: '1.5rem', cursor: 'help' }}>
+                                    {badge.icon}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <span className={`elo-badge ${stats.elo.class}`} style={{ fontSize: '1rem', marginTop: '0.3rem' }}>
                         {stats.elo.name}
                     </span>
                     <p className="subtitle" style={{ marginTop: '0.5rem', width: '100%', textAlign: 'center' }}>
@@ -116,6 +131,8 @@ function PlayerProfile() {
                     </div>
                 </div>
             </div>
+
+            <PDLChart history={history} playerName={player.name} season={selectedSeason} />
 
             <div className="social-stats">
                 <div className="social-card glass-panel" style={{ padding: '1.5rem' }}>
