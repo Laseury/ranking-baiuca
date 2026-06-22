@@ -278,7 +278,81 @@ function Ranking() {
                 )}
             </div>
 
-            {/* Novidade 1: Pódio do Top 3 */}
+            {/* ── BARRA DE BUSCA E FILTRO ── */}
+            <div className="search-filter-bar glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className="search-input-wrapper" style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+                        <input 
+                            type="text" 
+                            placeholder="Buscar jogador..." 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)} 
+                            style={{
+                                width: '100%',
+                                padding: '0.6rem 1rem 0.6rem 2.5rem',
+                                background: 'rgba(0,0,0,0.3)',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '6px',
+                                color: 'var(--text-main)',
+                                fontFamily: 'Outfit, sans-serif'
+                            }}
+                        />
+                    </div>
+                    <div className="elo-filter-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button 
+                            className={`btn ${selectedEloFilter === 'All' ? 'purple-btn' : 'secondary-btn'}`}
+                            onClick={() => setSelectedEloFilter('All')}
+                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px' }}
+                        >
+                            Todos
+                        </button>
+                        {['Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Esmeralda', 'Diamante', 'Mestre', 'Challenger'].map(eloName => {
+                            const eloIcons = {
+                                'Ferro': '⚙️', 'Bronze': '🥉', 'Prata': '🥈', 'Ouro': '🥇', 
+                                'Platina': '💠', 'Esmeralda': '✳️', 'Diamante': '💎', 'Mestre': '👑', 'Challenger': '🏆'
+                            };
+                            const isActive = selectedEloFilter === eloName;
+                            return (
+                                <button 
+                                    key={eloName}
+                                    className={`btn ${isActive ? 'purple-btn' : 'secondary-btn'}`}
+                                    onClick={() => setSelectedEloFilter(eloName)}
+                                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                >
+                                    <span>{eloIcons[eloName]}</span> {eloName}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── RANKING OFICIAL ── */}
+            <section className="ranking-section">
+                <div className="section-header">
+                    <h2>Ranking Oficial</h2>
+                    <span className="badge">10+ Partidas</span>
+                </div>
+                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
+                    <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
+                </div>
+            </section>
+
+            {/* ── RANKING PROVISÓRIO ── */}
+            <section className="ranking-section provisional">
+                <div className="section-header">
+                    <h2>Ranking Provisório</h2>
+                    <span className="badge warning">Menos de 10 Partidas</span>
+                </div>
+                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
+                    <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
+                </div>
+            </section>
+
+            {/* ══ SEÇÕES EXTRAS — abaixo do ranking ══ */}
+
+            {/* Pódio do Top 3 */}
             {top3.length > 0 && (
                 <section className="ranking-section podium-section">
                     <div className="section-header">
@@ -487,76 +561,6 @@ function Ranking() {
                     </div>
                 </section>
             )}
-
-            {/* Novidade 2: Barra de Busca e Filtro por ELO */}
-            <div className="search-filter-bar glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div className="search-input-wrapper" style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
-                        <input 
-                            type="text" 
-                            placeholder="Buscar jogador..." 
-                            value={searchTerm} 
-                            onChange={(e) => setSearchTerm(e.target.value)} 
-                            style={{
-                                width: '100%',
-                                padding: '0.6rem 1rem 0.6rem 2.5rem',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid var(--glass-border)',
-                                borderRadius: '6px',
-                                color: 'var(--text-main)',
-                                fontFamily: 'Outfit, sans-serif'
-                            }}
-                        />
-                    </div>
-                    <div className="elo-filter-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button 
-                            className={`btn ${selectedEloFilter === 'All' ? 'purple-btn' : 'secondary-btn'}`}
-                            onClick={() => setSelectedEloFilter('All')}
-                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px' }}
-                        >
-                            Todos
-                        </button>
-                        {['Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Esmeralda', 'Diamante', 'Mestre', 'Challenger'].map(eloName => {
-                            const eloIcons = {
-                                'Ferro': '⚙️', 'Bronze': '🥉', 'Prata': '🥈', 'Ouro': '🥇', 
-                                'Platina': '💠', 'Esmeralda': '✳️', 'Diamante': '💎', 'Mestre': '👑', 'Challenger': '🏆'
-                            };
-                            const isActive = selectedEloFilter === eloName;
-                            return (
-                                <button 
-                                    key={eloName}
-                                    className={`btn ${isActive ? 'purple-btn' : 'secondary-btn'}`}
-                                    onClick={() => setSelectedEloFilter(eloName)}
-                                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                >
-                                    <span>{eloIcons[eloName]}</span> {eloName}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            <section className="ranking-section">
-                <div className="section-header">
-                    <h2>Ranking Oficial</h2>
-                    <span className="badge">10+ Partidas</span>
-                </div>
-                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
-                </div>
-            </section>
-
-            <section className="ranking-section provisional">
-                <div className="section-header">
-                    <h2>Ranking Provisório</h2>
-                    <span className="badge warning">Menos de 10 Partidas</span>
-                </div>
-                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
-                </div>
-            </section>
         </div>
     );
 }
