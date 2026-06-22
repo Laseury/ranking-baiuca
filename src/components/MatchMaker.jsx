@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import Swal from 'sweetalert2';
 
@@ -26,6 +26,37 @@ function MatchMaker({ players, onMatchResult }) {
     const [lastMatchTeams, setLastMatchTeams] = useState(null);
     const [drawMethod, setDrawMethod] = useState(null);
 
+    // Estados premium de animação e comemoração
+    const [isShuffling, setIsShuffling] = useState(false);
+    const [celebrationData, setCelebrationData] = useState(null);
+    const [animatedPdl, setAnimatedPdl] = useState(0);
+
+    // Efeito para contar de 0 até o PDL de comemoração de forma animada
+    useEffect(() => {
+        if (celebrationData) {
+            setAnimatedPdl(0);
+            let start = 0;
+            const end = celebrationData.points;
+            if (end === 0) return;
+            const duration = 1200; // 1.2s total duration
+            const stepTime = Math.max(Math.floor(duration / end), 20); // min 20ms step
+            
+            const timer = setInterval(() => {
+                start += 1;
+                if (start >= end) {
+                    setAnimatedPdl(end);
+                    clearInterval(timer);
+                } else {
+                    setAnimatedPdl(start);
+                }
+            }, stepTime);
+            
+            return () => clearInterval(timer);
+        } else {
+            setAnimatedPdl(0);
+        }
+    }, [celebrationData]);
+
     const togglePlayer = (id) => {
         if (selectedIds.includes(id)) {
             setSelectedIds(selectedIds.filter(playerId => playerId !== id));
@@ -39,91 +70,99 @@ function MatchMaker({ players, onMatchResult }) {
 
     const handleSortear = () => {
         if (selectedIds.length < 6 || selectedIds.length % 2 !== 0) return;
+        setIsShuffling(true);
 
-        // Shuffle
-        const shuffled = shuffleArray(selectedIds);
-        
-        const half = Math.floor(shuffled.length / 2);
-        const tA = shuffled.slice(0, half).map(id => players.find(p => p.id === id));
-        const tB = shuffled.slice(half).map(id => players.find(p => p.id === id));
+        setTimeout(() => {
+            // Shuffle
+            const shuffled = shuffleArray(selectedIds);
+            
+            const half = Math.floor(shuffled.length / 2);
+            const tA = shuffled.slice(0, half).map(id => players.find(p => p.id === id));
+            const tB = shuffled.slice(half).map(id => players.find(p => p.id === id));
 
-        setTeamA(shuffleArray(tA));
-        setTeamB(shuffleArray(tB));
-        setDrawMethod('puro');
-        setMatchOngoing(true);
+            setTeamA(shuffleArray(tA));
+            setTeamB(shuffleArray(tB));
+            setDrawMethod('puro');
+            setIsShuffling(false);
+            setMatchOngoing(true);
+        }, 1500);
     };
 
     const handleSortearEquilibrado = () => {
         if (selectedIds.length < 6 || selectedIds.length % 2 !== 0) return;
+        setIsShuffling(true);
 
-        const selectedPlayers = selectedIds.map(id => players.find(p => p.id === id));
-        
-        // Geração de todas as combinações possíveis de tamanho k
-        function getCombinations(array, k) {
-            const result = [];
-            function helper(start, combo) {
-                if (combo.length === k) {
-                    result.push([...combo]);
-                    return;
-                }
-                for (let i = start; i < array.length; i++) {
-                    combo.push(array[i]);
-                    helper(i + 1, combo);
-                    combo.pop();
-                }
-            }
-            helper(0, []);
-            return result;
-        }
-
-        const teamSize = selectedPlayers.length / 2;
-        const combos = getCombinations(selectedPlayers, teamSize);
-        const uniquePartitions = [];
-        const seenKeys = new Set();
-
-        for (const teamA of combos) {
-            const teamB = selectedPlayers.filter(p => !teamA.some(ta => ta.id === p.id));
+        setTimeout(() => {
+            const selectedPlayers = selectedIds.map(id => players.find(p => p.id === id));
             
-            // Chave de ordenação independente para evitar duplicados espelhados (Time A vs B === B vs A)
-            const idA = teamA.map(p => p.id).sort().join(',');
-            const idB = teamB.map(p => p.id).sort().join(',');
-            const key = [idA, idB].sort().join('|');
-
-            if (!seenKeys.has(key)) {
-                seenKeys.add(key);
-                const sumA = teamA.reduce((sum, p) => sum + getRating(p), 0);
-                const sumB = teamB.reduce((sum, p) => sum + getRating(p), 0);
-                uniquePartitions.push({
-                    teamA,
-                    teamB,
-                    diff: Math.abs(sumA - sumB)
-                });
+            // Geração de todas as combinações possíveis de tamanho k
+            function getCombinations(array, k) {
+                const result = [];
+                function helper(start, combo) {
+                    if (combo.length === k) {
+                        result.push([...combo]);
+                        return;
+                    }
+                    for (let i = start; i < array.length; i++) {
+                        combo.push(array[i]);
+                        helper(i + 1, combo);
+                        combo.pop();
+                    }
+                }
+                helper(0, []);
+                return result;
             }
-        }
 
-        // Shuffle partitions first to randomize ties with the same 'diff'
-        const shuffledPartitions = shuffleArray(uniquePartitions);
-        shuffledPartitions.sort((a, b) => a.diff - b.diff);
+            const teamSize = selectedPlayers.length / 2;
+            const combos = getCombinations(selectedPlayers, teamSize);
+            const uniquePartitions = [];
+            const seenKeys = new Set();
 
-        // Escolher aleatoriamente entre as top 5 combinações mais equilibradas para manter o fator surpresa
-        const poolLimit = Math.min(5, shuffledPartitions.length);
-        const randomIndex = Math.floor(Math.random() * poolLimit);
-        const bestPartition = shuffledPartitions[randomIndex];
+            for (const teamA of combos) {
+                const teamB = selectedPlayers.filter(p => !teamA.some(ta => ta.id === p.id));
+                
+                // Chave de ordenação independente para evitar duplicados espelhados (Time A vs B === B vs A)
+                const idA = teamA.map(p => p.id).sort().join(',');
+                const idB = teamB.map(p => p.id).sort().join(',');
+                const key = [idA, idB].sort().join('|');
 
-        // Sorteia quem exibe como Time A e Time B, and shuffle players within teams
-        const finalTeamA = shuffleArray(bestPartition.teamA);
-        const finalTeamB = shuffleArray(bestPartition.teamB);
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    const sumA = teamA.reduce((sum, p) => sum + getRating(p), 0);
+                    const sumB = teamB.reduce((sum, p) => sum + getRating(p), 0);
+                    uniquePartitions.push({
+                        teamA,
+                        teamB,
+                        diff: Math.abs(sumA - sumB)
+                    });
+                }
+            }
 
-        if (Math.random() > 0.5) {
-            setTeamA(finalTeamA);
-            setTeamB(finalTeamB);
-        } else {
-            setTeamA(finalTeamB);
-            setTeamB(finalTeamA);
-        }
-        
-        setDrawMethod('equilibrado');
-        setMatchOngoing(true);
+            // Shuffle partitions first to randomize ties with the same 'diff'
+            const shuffledPartitions = shuffleArray(uniquePartitions);
+            shuffledPartitions.sort((a, b) => a.diff - b.diff);
+
+            // Escolher aleatoriamente entre as top 5 combinações mais equilibradas para manter o fator surpresa
+            const poolLimit = Math.min(5, shuffledPartitions.length);
+            const randomIndex = Math.floor(Math.random() * poolLimit);
+            const bestPartition = shuffledPartitions[randomIndex];
+
+            // Sorteia quem exibe como Time A e Time B, and shuffle players within teams
+            const finalTeamA = shuffleArray(bestPartition.teamA);
+            const finalTeamB = shuffleArray(bestPartition.teamB);
+
+            if (Math.random() > 0.5) {
+                setTeamA(finalTeamA);
+                setTeamB(finalTeamB);
+            } else {
+                setTeamA(finalTeamB);
+                setTeamB(finalTeamA);
+            }
+            
+            setDrawMethod('equilibrado');
+            setIsShuffling(false);
+            setMatchOngoing(true);
+        }, 1500);
     };
 
     const handleRepetir = () => {
@@ -140,30 +179,26 @@ function MatchMaker({ players, onMatchResult }) {
 
         // Efeito de confete temático
         confetti({
-            particleCount: 150,
-            spread: 70,
+            particleCount: 200,
+            spread: 80,
             origin: { y: 0.6 },
-            colors: winnerTeam === 'A' ? ['#00d2ff', '#ffffff'] : ['#ff00ea', '#ffffff']
+            colors: winnerTeam === 'A' ? ['#00d2ff', '#ffffff', '#c89b3c'] : ['#ff00ea', '#ffffff', '#c89b3c']
         });
 
-        // Feedback visual
-        await Swal.fire({
-            title: `Vitória do ${teamLabel}!`,
-            html: `Os pontos foram distribuídos.<br/><b>+ PDL para os vencedores!</b>`,
-            icon: 'success',
-            background: '#0a0e14',
-            color: '#f0e6d2',
-            confirmButtonColor: '#c89b3c',
-            timer: 2000,
-            showConfirmButton: false,
-            timerProgressBar: true
-        });
+        // Envia o resultado e obtém os pontos (P) ganhos
+        const P = await onMatchResult(winTeam, lossTeam);
 
-        onMatchResult(winTeam, lossTeam);
-        
         // Salva os times atuais para permitir repetição rápida
         setLastMatchTeams({ teamA, teamB });
         
+        // Ativa o overlay de comemoração premium
+        setCelebrationData({
+            winnerTeamName: teamLabel,
+            winners: winTeam,
+            losers: lossTeam,
+            points: P || 20
+        });
+
         // Reseta o estado da partida, mas MANTÉM os IDs selecionados para o próximo jogo
         setMatchOngoing(false);
         setTeamA([]);
@@ -176,23 +211,20 @@ function MatchMaker({ players, onMatchResult }) {
         const losers = manualLosers.map(id => players.find(p => p.id === id));
 
         confetti({
-            particleCount: 100,
-            spread: 50,
+            particleCount: 150,
+            spread: 60,
             origin: { y: 0.6 }
         });
 
-        await Swal.fire({
-            title: 'Partida Registrada!',
-            text: 'O ranking foi atualizado com sucesso.',
-            icon: 'success',
-            background: '#0a0e14',
-            color: '#f0e6d2',
-            confirmButtonColor: '#c89b3c',
-            timer: 1500,
-            showConfirmButton: false
+        const P = await onMatchResult(winners, losers);
+
+        setCelebrationData({
+            winnerTeamName: 'Ganhadores (Manual)',
+            winners: winners,
+            losers: losers,
+            points: P || 20
         });
 
-        onMatchResult(winners, losers);
         setIsManualMode(false);
         setManualWinners([]);
         setManualLosers([]);
@@ -236,6 +268,22 @@ function MatchMaker({ players, onMatchResult }) {
     // Chance de vitória do Time B
     const expB = (mmrA - mmrB) / 800;
     const chanceB = teamB.length > 0 ? (1 / (1 + Math.pow(10, expB)) * 100).toFixed(1) : 0;
+
+    if (isShuffling) {
+        return (
+            <section className="matchmaker-section glass-panel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px' }}>
+                <div className="shuffling-overlay" style={{ width: '100%', border: 'none', background: 'none', marginBottom: 0 }}>
+                    <div className="shuffling-card-deck">
+                        <div className="shuffling-card card-1">🎲</div>
+                        <div className="shuffling-card card-2">⚔️</div>
+                        <div className="shuffling-card card-3">🛡️</div>
+                    </div>
+                    <h3 style={{ color: 'var(--primary-color)', textShadow: '0 0 10px var(--primary-glow)', marginBottom: '0.5rem', fontSize: '1.4rem' }}>Sorteando e Equilibrando Times...</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Calculando MMRs de Runeterra...</p>
+                </div>
+            </section>
+        );
+    }
 
     if (matchOngoing) {
         return (
@@ -304,7 +352,7 @@ function MatchMaker({ players, onMatchResult }) {
 
     if (isManualMode) {
         return (
-            <section className="matchmaker-section">
+            <section className="matchmaker-section animate-fadeIn">
                 <div className="matchmaker-header header-with-btn">
                     <h2>⚙️ Cadastro Manual</h2>
                     <button className="btn cancel-btn" onClick={() => setIsManualMode(false)}>Voltar ao Sorteio</button>
@@ -352,7 +400,40 @@ function MatchMaker({ players, onMatchResult }) {
     }
 
     return (
-        <section className="matchmaker-section">
+        <section className="matchmaker-section" style={{ position: 'relative' }}>
+            {celebrationData && (
+                <div className="celebration-overlay">
+                    <div className="celebration-content glass-panel">
+                        <h1 className="celebration-title">🎉 Vitória de {celebrationData.winnerTeamName}!</h1>
+                        <div className="celebration-pdl-counter">
+                            <span className="pdl-text">Pontos Distribuídos</span>
+                            <span className="pdl-value">+{animatedPdl} PDL</span>
+                        </div>
+                        <div className="celebration-teams-summary">
+                            <div className="celebration-team-col winners">
+                                <h3>Vencedores (+{celebrationData.points} PDL)</h3>
+                                <ul>
+                                    {celebrationData.winners.map(p => (
+                                        <li key={p.id}>{p.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="celebration-team-col losers">
+                                <h3>Perdedores (-{celebrationData.points} PDL)</h3>
+                                <ul>
+                                    {celebrationData.losers.map(p => (
+                                        <li key={p.id}>{p.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                        <button className="btn win-btn" onClick={() => setCelebrationData(null)} style={{ marginTop: '1rem' }}>
+                            Confirmar e Fechar
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="matchmaker-header header-with-btn">
                 <h2>🏆 Criar Partida</h2>
                 <div style={{ display: 'flex', gap: '0.8rem' }}>

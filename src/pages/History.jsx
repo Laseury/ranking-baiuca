@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { calculateTeamSynergies } from '../utils/season';
 
 function History() {
-    const { history, players } = useContext(AppContext);
+    const { history, players, currentSeason } = useContext(AppContext);
     const [dateFilter, setDateFilter] = useState('');
     const [playerFilter, setPlayerFilter] = useState('');
     const navigate = useNavigate();
@@ -62,28 +63,47 @@ function History() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredHistory.map(match => (
-                                <tr key={match.id}>
-                                    <td>{match.date}</td>
-                                    <td className="winrate-high">
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span>{match.winners.join(', ')}</span>
-                                            {match.pontosGanhos && <span className="pdl-badge gain">+{match.pontosGanhos} PDL</span>}
-                                        </div>
-                                    </td>
-                                    <td className="winrate-low">
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span>{match.losers.join(', ')}</span>
-                                            {match.pontosPerdidos && <span className="pdl-badge loss">-{match.pontosPerdidos} PDL</span>}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className="badge" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)' }}>
-                                            👤 {match.createdBy || 'Sistema'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                            {filteredHistory.map(match => {
+                                const winnerSynergies = calculateTeamSynergies(history, match.winners, match.season || 'Season 1');
+                                const loserSynergies = calculateTeamSynergies(history, match.losers, match.season || 'Season 1');
+                                
+                                return (
+                                    <tr key={match.id}>
+                                        <td>{match.date}</td>
+                                        <td className="winrate-high">
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <span style={{ fontWeight: '600' }}>{match.winners.join(', ')}</span>
+                                                <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    {match.pontosGanhos && <span className="pdl-badge gain">+{match.pontosGanhos} PDL</span>}
+                                                    {winnerSynergies.map((s, idx) => (
+                                                        <span key={idx} className={`synergy-tag ${s.type}`} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
+                                                            {s.type === 'good' ? '🔥' : '❄️'} {s.p1} + {s.p2}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="winrate-low">
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <span style={{ fontWeight: '600' }}>{match.losers.join(', ')}</span>
+                                                <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    {match.pontosPerdidos && <span className="pdl-badge loss">-{match.pontosPerdidos} PDL</span>}
+                                                    {loserSynergies.map((s, idx) => (
+                                                        <span key={idx} className={`synergy-tag ${s.type}`} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
+                                                            {s.type === 'good' ? '🔥' : '❄️'} {s.p1} + {s.p2}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="badge" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)' }}>
+                                                👤 {match.createdBy || 'Sistema'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 )}

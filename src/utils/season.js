@@ -187,8 +187,26 @@ export function calculateAchievements(player, playersList, history, season) {
     const badges = [];
     if (!player || player.total === 0) return badges;
     
-    // 1. Fire Badge: Streak of 3+ wins
     const streak = player.streak || [];
+    
+    // 1. Soberano: Rank #1 in official players list
+    const officialSorted = [...playersList]
+        .filter(p => p.total >= 10)
+        .sort((a, b) => {
+            if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+            return b.winrate - a.winrate;
+        });
+    const rank1Player = officialSorted[0];
+    if (rank1Player && rank1Player.name === player.name) {
+        badges.push({
+            id: 'sovereign',
+            icon: '👑',
+            name: 'Soberano',
+            desc: 'Líder atual do ranking oficial!'
+        });
+    }
+
+    // 2. Fire & Imbatível Badge
     let currentStreakCount = 0;
     for (let i = streak.length - 1; i >= 0; i--) {
         if (streak[i] === "W") {
@@ -197,7 +215,14 @@ export function calculateAchievements(player, playersList, history, season) {
             break;
         }
     }
-    if (currentStreakCount >= 3) {
+    if (currentStreakCount >= 5) {
+        badges.push({
+            id: 'invincible',
+            icon: '⚡',
+            name: 'Imbatível',
+            desc: `Sequência incrível de ${currentStreakCount} vitórias seguidas!`
+        });
+    } else if (currentStreakCount >= 3) {
         badges.push({
             id: 'on-fire',
             icon: '🔥',
@@ -206,7 +231,25 @@ export function calculateAchievements(player, playersList, history, season) {
         });
     }
     
-    // 2. Inabalável: Winrate >= 60% and total >= 10
+    // 3. Saco de Pancadas Badge
+    let currentLossStreak = 0;
+    for (let i = streak.length - 1; i >= 0; i--) {
+        if (streak[i] === "L") {
+            currentLossStreak++;
+        } else {
+            break;
+        }
+    }
+    if (currentLossStreak >= 3) {
+        badges.push({
+            id: 'punching-bag',
+            icon: '🤕',
+            name: 'Saco de Pancadas',
+            desc: `Sequência de ${currentLossStreak} derrotas seguidas. Dias melhores virão!`
+        });
+    }
+
+    // 4. Inabalável: Winrate >= 60% and total >= 10
     if (player.winrate >= 60 && player.total >= 10) {
         badges.push({
             id: 'unstoppable',
@@ -216,7 +259,7 @@ export function calculateAchievements(player, playersList, history, season) {
         });
     }
     
-    // 3. Maratonista: Most games played in this season
+    // 5. Maratonista: Most games played in this season
     const activePlayers = playersList.filter(p => p.total > 0);
     if (activePlayers.length > 0) {
         const maxGames = Math.max(...activePlayers.map(p => p.total || 0));
@@ -230,7 +273,17 @@ export function calculateAchievements(player, playersList, history, season) {
         }
     }
     
-    // 4. Algoz do Líder: Most wins against current MVP (min 2)
+    // 6. Veterano: total matches >= 20
+    if (player.total >= 20) {
+        badges.push({
+            id: 'veteran',
+            icon: '🧙‍♂️',
+            name: 'Veterano',
+            desc: `Disputou ${player.total} partidas nesta temporada!`
+        });
+    }
+
+    // 7. Algoz do Líder: Most wins against current MVP (min 2)
     const sortedPlayers = [...playersList].sort((a, b) => {
         if (b.pontos !== a.pontos) return b.pontos - a.pontos;
         return b.winrate - a.winrate;
@@ -275,7 +328,7 @@ export function calculateAchievements(player, playersList, history, season) {
         }
     }
     
-    // 5. Ascendente: Won the last 2 matches
+    // 8. Ascendente: Won the last 2 matches
     if (streak.length >= 2 && streak[streak.length - 1] === "W" && streak[streak.length - 2] === "W") {
         badges.push({
             id: 'ascendant',
@@ -284,6 +337,77 @@ export function calculateAchievements(player, playersList, history, season) {
             desc: 'Subindo rápido! Ganhou as duas últimas partidas.'
         });
     }
+
+    // 9. Promessa: provisional player with WR >= 60% and total >= 3
+    if (player.total < 10 && player.total >= 3 && player.winrate >= 60) {
+        badges.push({
+            id: 'promise',
+            icon: '🌱',
+            name: 'Promessa',
+            desc: `Taxa de vitória de ${player.winrate}% em ${player.total} jogos!`
+        });
+    }
+
+    // 10. Pé Frio: official player with WR < 35%
+    if (player.total >= 10 && player.winrate < 35) {
+        badges.push({
+            id: 'cold-foot',
+            icon: '❄️',
+            name: 'Pé Frio',
+            desc: `Taxa de vitória de ${player.winrate}% em ${player.total} jogos. Fase difícil!`
+        });
+    }
     
     return badges;
+}
+
+/**
+ * Calculates active synergies (positive or negative) between pairs of players in a given team list.
+ * A positive synergy is when they win >= 60% of games played together (min 2 games).
+ * A negative synergy is when they win <= 35% of games played together (min 2 games).
+ */
+export function calculateTeamSynergies(history, teamList, season) {
+    if (!teamList || teamList.length < 2) return [];
+    const pairs = [];
+    const activeSeason = season || 'Season 1';
+    
+    // Filter matches by season
+    const seasonMatches = history.filter(m => 
+        m.season === activeSeason || (!m.season && activeSeason === 'Season 1')
+    );
+    
+    // Check all pairs in the team list
+    for (let i = 0; i < teamList.length; i++) {
+        for (let j = i + 1; j < teamList.length; j++) {
+            const p1 = teamList[i];
+            const p2 = teamList[j];
+            
+            let gamesTogether = 0;
+            let winsTogether = 0;
+            
+            seasonMatches.forEach(m => {
+                const p1Win = m.winners.includes(p1);
+                const p2Win = m.winners.includes(p2);
+                const p1Loss = m.losers.includes(p1);
+                const p2Loss = m.losers.includes(p2);
+                
+                if (p1Win && p2Win) {
+                    gamesTogether++;
+                    winsTogether++;
+                } else if (p1Loss && p2Loss) {
+                    gamesTogether++;
+                }
+            });
+            
+            if (gamesTogether >= 2) {
+                const wr = (winsTogether / gamesTogether) * 100;
+                if (wr >= 60.0) {
+                    pairs.push({ p1, p2, wr, type: 'good' });
+                } else if (wr <= 35.0) {
+                    pairs.push({ p1, p2, wr, type: 'bad' });
+                }
+            }
+        }
+    }
+    return pairs;
 }

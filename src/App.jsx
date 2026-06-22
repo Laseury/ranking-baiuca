@@ -18,9 +18,10 @@ const PrivateRoute = ({ children }) => {
 };
 
 function AppContent() {
+    const { region } = useContext(AppContext);
     return (
         <Router>
-            <div className="app-container">
+            <div className={`app-container region-${region}`}>
                 <Navbar />
                 <div className="container">
                     <Routes>

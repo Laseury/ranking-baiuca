@@ -29,6 +29,12 @@ export const AppProvider = ({ children }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentSeason, setCurrentSeason] = useState("Season 1");
+    const [region, setRegion] = useState(localStorage.getItem('runeterra_region') || 'default');
+
+    const changeRegion = (newRegion) => {
+        setRegion(newRegion);
+        localStorage.setItem('runeterra_region', newRegion);
+    };
 
     useEffect(() => {
         const cleanupDuplicates = async () => {
@@ -246,6 +252,7 @@ export const AppProvider = ({ children }) => {
                 createdBy: author
             };
             await addDoc(collection(db, "history"), newMatch);
+            return P;
 
         } catch(error) {
             console.error("Erro ao registrar partida", error);
@@ -263,7 +270,9 @@ export const AppProvider = ({ children }) => {
             handleMatchResult, 
             addPlayer,
             currentSeason,
-            changeSeason
+            changeSeason,
+            changeRegion,
+            region
         }}>
             {!loading && children}
         </AppContext.Provider>

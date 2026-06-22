@@ -1,9 +1,24 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
-import { getPlayersForSeason, getSeasonOptions, calculateRankingTrend } from '../utils/season';
+import { getPlayersForSeason, getSeasonOptions, calculateRankingTrend, calculateAchievements } from '../utils/season';
 
 import Swal from 'sweetalert2';
+
+const allAchievementsList = [
+    { id: 'sovereign', icon: '👑', name: 'Soberano', desc: 'Líder atual do ranking oficial (Rank #1).' },
+    { id: 'invincible', icon: '⚡', name: 'Imbatível', desc: 'Sequência incrível de 5 ou mais vitórias seguidas!' },
+    { id: 'on-fire', icon: '🔥', name: 'On Fire', desc: 'Sequência de 3 ou 4 vitórias seguidas!' },
+    { id: 'ascendant', icon: '🚀', name: 'Ascendente', desc: 'Ganhou as últimas duas partidas!' },
+    { id: 'punching-bag', icon: '🤕', name: 'Saco de Pancadas', desc: 'Sequência de 3 ou mais derrotas seguidas. Dias melhores virão!' },
+    { id: 'unstoppable', icon: '🛡️', name: 'Inabalável', desc: 'Taxa de vitória de 60% ou mais com pelo menos 10 partidas!' },
+    { id: 'marathoner', icon: '⚔️', name: 'Maratonista', desc: 'O guerreiro com mais partidas disputadas na temporada!' },
+    { id: 'veteran', icon: '🧙‍♂️', name: 'Veterano', desc: 'Disputou 20 ou mais partidas na temporada!' },
+    { id: 'mvp-slayer', icon: '🎯', name: 'Algoz do Líder', desc: 'Venceu o líder do ranking mais vezes na temporada (mínimo 2 vitórias).' },
+    { id: 'promise', icon: '🌱', name: 'Promessa', desc: 'Jogador provisório (menos de 10 jogos) com Winrate de 60% ou mais (mínimo 3 partidas).' },
+    { id: 'cold-foot', icon: '❄️', name: 'Pé Frio', desc: 'Jogador oficial (10+ jogos) com Winrate abaixo de 35%.' }
+];
 
 function Ranking() {
     const { players, history, currentSeason, changeSeason } = useContext(AppContext);
@@ -11,6 +26,9 @@ function Ranking() {
     const [officialPlayers, setOfficialPlayers] = useState([]);
     const [provisionalPlayers, setProvisionalPlayers] = useState([]);
     const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedEloFilter, setSelectedEloFilter] = useState('All');
+    const [showAchievementsLibrary, setShowAchievementsLibrary] = useState(false);
 
     // Calculate ranking trend map
     const trends = useMemo(() => {
@@ -36,7 +54,15 @@ function Ranking() {
                     if (b.pontos !== a.pontos) return b.pontos - a.pontos;
                     return b.winrate - a.winrate;
                 });
-                const champ = processed[0];
+                
+                // Override for Season 1 to show Ministro as requested
+                let champ;
+                if (season === "Season 1") {
+                    champ = processed.find(p => p.name === "Ministro") || processed[0];
+                } else {
+                    champ = processed[0];
+                }
+
                 if (champ && champ.total > 0) {
                     list.push({
                         season: season.replace('Season', 'Temporada'),
@@ -55,7 +81,6 @@ function Ranking() {
     useEffect(() => {
         const handleResize = () => {
             // Só atualiza automaticamente se o usuário ainda não tiver "forçado" uma visão
-            // Mas para simplificar, vamos deixar o usuário decidir.
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -101,9 +126,95 @@ function Ranking() {
         }
     };
 
-    const mvp = officialPlayers[0] || provisionalPlayers[0] || null;
-    const bestWinrate = [...officialPlayers].sort((a, b) => b.winrate - a.winrate)[0];
-    const mostExp = [...officialPlayers, ...provisionalPlayers].sort((a, b) => b.total - a.total)[0];
+    let mvp = officialPlayers[0] || provisionalPlayers[0] || null;
+    let bestWinrate = [...officialPlayers].sort((a, b) => b.winrate - a.winrate)[0];
+    const mostLosses = [...officialPlayers, ...provisionalPlayers].sort((a, b) => b.derrotas - a.derrotas)[0];
+
+    // Force Ministro as MVP and Best Winrate for Season 1 dashboard cards
+    if (selectedSeason === "Season 1") {
+        const ministro = [...officialPlayers, ...provisionalPlayers].find(p => p.name === "Ministro");
+        if (ministro) {
+            mvp = ministro;
+            bestWinrate = ministro;
+        }
+    }
+
+    const filteredOfficial = useMemo(() => {
+        return officialPlayers.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesElo = selectedEloFilter === 'All' || p.elo?.name === selectedEloFilter;
+            return matchesSearch && matchesElo;
+        });
+    }, [officialPlayers, searchTerm, selectedEloFilter]);
+
+    const filteredProvisional = useMemo(() => {
+        return provisionalPlayers.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesElo = selectedEloFilter === 'All' || p.elo?.name === selectedEloFilter;
+            return matchesSearch && matchesElo;
+        });
+    }, [provisionalPlayers, searchTerm, selectedEloFilter]);
+
+    const top3 = useMemo(() => {
+        const list = [...officialPlayers];
+        if (list.length < 3) {
+            provisionalPlayers.forEach(p => {
+                if (list.length < 3 && !list.some(x => x.name === p.name)) {
+                    list.push(p);
+                }
+            });
+        }
+        return list.slice(0, 3);
+    }, [officialPlayers, provisionalPlayers]);
+
+    const recentSeasonMatches = useMemo(() => {
+        return history
+            .filter(m => m.season === selectedSeason || (!m.season && selectedSeason === 'Season 1'))
+            .slice(0, 3);
+    }, [history, selectedSeason]);
+
+    const eloDistribution = useMemo(() => {
+        const counts = {
+            'Challenger': 0, 'Mestre': 0, 'Diamante': 0, 'Esmeralda': 0, 
+            'Platina': 0, 'Ouro': 0, 'Prata': 0, 'Bronze': 0, 'Ferro': 0
+        };
+        const totalPlayers = officialPlayers.length + provisionalPlayers.length;
+        [...officialPlayers, ...provisionalPlayers].forEach(p => {
+            const eloName = p.elo?.name || 'Ferro';
+            if (counts[eloName] !== undefined) {
+                counts[eloName]++;
+            }
+        });
+        return { counts, totalPlayers };
+    }, [officialPlayers, provisionalPlayers]);
+
+    const achievementsWithPlayers = useMemo(() => {
+        const map = {};
+        allAchievementsList.forEach(ach => {
+            map[ach.id] = { ...ach, unlockedBy: [] };
+        });
+
+        const allPlayers = [...officialPlayers, ...provisionalPlayers];
+        const seasonPlayers = getPlayersForSeason(players, history, selectedSeason, currentSeason);
+        
+        allPlayers.forEach(p => {
+            const pSeason = seasonPlayers.find(x => x.name === p.name);
+            if (pSeason) {
+                const badges = calculateAchievements(pSeason, seasonPlayers, history, selectedSeason);
+                badges.forEach(b => {
+                    if (map[b.id]) {
+                        map[b.id].unlockedBy.push(p.name);
+                    }
+                });
+            }
+        });
+
+        return Object.values(map);
+    }, [officialPlayers, provisionalPlayers, players, history, selectedSeason, currentSeason]);
+
+    const p1 = top3[0];
+    const p2 = top3[1];
+    const p3 = top3[2];
 
     return (
         <div className="fade-in">
@@ -155,17 +266,188 @@ function Ranking() {
                         </div>
                     </div>
                 )}
-                {mostExp && (
+                {mostLosses && (
                     <div className="dashboard-card glass-panel">
-                        <div className="card-icon">⚔️</div>
+                        <div className="card-icon">💀</div>
                         <div className="card-info">
-                            <h4>Mais Experiente</h4>
-                            <span className="card-value">{mostExp.name}</span>
-                            <span className="card-sub">{mostExp.total} Partidas</span>
+                            <h4>Mais Derrotas</h4>
+                            <span className="card-value">{mostLosses.name}</span>
+                            <span className="card-sub">{mostLosses.derrotas} Derrotas</span>
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* Novidade 1: Pódio do Top 3 */}
+            {top3.length > 0 && (
+                <section className="ranking-section podium-section">
+                    <div className="section-header">
+                        <h2>🏆 Pódio dos Melhores</h2>
+                        <span className="badge">Top 3 da Temporada</span>
+                    </div>
+                    <div className="podium-container glass-panel">
+                        {p2 && (
+                            <div className="podium-card rank-2-card">
+                                <div className="podium-position-badge">#2</div>
+                                <div className="podium-avatar-container">
+                                    <span className="podium-elo-icon">{p2.elo?.icon || '🥈'}</span>
+                                </div>
+                                <Link to={`/player/${p2.name}`} className="podium-player-name">{p2.name}</Link>
+                                <div className="podium-stats-row">
+                                    <span className="podium-stat pdl">{p2.pontos} PDL</span>
+                                    <span className="podium-stat wr">{p2.winrate}% WR</span>
+                                </div>
+                            </div>
+                        )}
+                        {p1 && (
+                            <div className="podium-card rank-1-card">
+                                <div className="podium-crown-badge">👑</div>
+                                <div className="podium-avatar-container">
+                                    <span className="podium-elo-icon">{p1.elo?.icon || '🥇'}</span>
+                                </div>
+                                <Link to={`/player/${p1.name}`} className="podium-player-name">{p1.name}</Link>
+                                <div className="podium-stats-row">
+                                    <span className="podium-stat pdl">{p1.pontos} PDL</span>
+                                    <span className="podium-stat wr">{p1.winrate}% WR</span>
+                                </div>
+                            </div>
+                        )}
+                        {p3 && (
+                            <div className="podium-card rank-3-card">
+                                <div className="podium-position-badge">#3</div>
+                                <div className="podium-avatar-container">
+                                    <span className="podium-elo-icon">{p3.elo?.icon || '🥉'}</span>
+                                </div>
+                                <Link to={`/player/${p3.name}`} className="podium-player-name">{p3.name}</Link>
+                                <div className="podium-stats-row">
+                                    <span className="podium-stat pdl">{p3.pontos} PDL</span>
+                                    <span className="podium-stat wr">{p3.winrate}% WR</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            <div className="stats-layout-grid">
+                {/* Novidade 3: Feed de Partidas Recentes */}
+                {recentSeasonMatches.length > 0 && (
+                    <section className="ranking-section recent-matches-section">
+                        <div className="section-header">
+                            <h2>⚔️ Partidas Recentes</h2>
+                            <span className="badge">Histórico Rápido</span>
+                        </div>
+                        <div className="recent-matches-grid">
+                            {recentSeasonMatches.map((match) => (
+                                <div key={match.id} className="recent-match-card glass-panel">
+                                    <div className="recent-match-header">
+                                        <span className="recent-match-date">{match.date?.split(' ')[0]}</span>
+                                        <span className="recent-match-pdl">+{match.pontosGanhos || 20} PDL</span>
+                                    </div>
+                                    <div className="recent-match-teams">
+                                        <div className="recent-match-team winners">
+                                            {match.winners?.map(name => (
+                                                <Link to={`/player/${name}`} key={name} className="recent-match-player">{name}</Link>
+                                            ))}
+                                        </div>
+                                        <div className="recent-match-vs">VS</div>
+                                        <div className="recent-match-team losers">
+                                            {match.losers?.map(name => (
+                                                <Link to={`/player/${name}`} key={name} className="recent-match-player">{name}</Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Novidade 4: Distribuição de Elo */}
+                <section className="ranking-section elo-dist-section">
+                    <div className="section-header">
+                        <h2>📊 Distribuição de Elo</h2>
+                        <span className="badge">Estatísticas</span>
+                    </div>
+                    <div className="elo-dist-card glass-panel">
+                        <div className="elo-dist-grid">
+                            {Object.entries(eloDistribution.counts).map(([eloName, count]) => {
+                                const percentage = eloDistribution.totalPlayers > 0 
+                                    ? (count / eloDistribution.totalPlayers) * 100 
+                                    : 0;
+                                if (count === 0) return null;
+                                
+                                const eloClasses = {
+                                    'Challenger': 'elo-challenger', 'Mestre': 'elo-master', 'Diamante': 'elo-diamond',
+                                    'Esmeralda': 'elo-emerald', 'Platina': 'elo-platinum', 'Ouro': 'elo-gold',
+                                    'Prata': 'elo-silver', 'Bronze': 'elo-bronze', 'Ferro': 'elo-iron'
+                                };
+                                const eloIcons = {
+                                    'Challenger': '🏆', 'Mestre': '👑', 'Diamante': '💎', 'Esmeralda': '✳️',
+                                    'Platina': '💠', 'Ouro': '🥇', 'Prata': '🥈', 'Bronze': '🥉', 'Ferro': '⚙️'
+                                };
+                                
+                                return (
+                                    <div key={eloName} className="elo-dist-item">
+                                        <div className="elo-dist-label">
+                                            <span className={`elo-badge ${eloClasses[eloName]}`}>
+                                                {eloIcons[eloName]} {eloName}
+                                            </span>
+                                            <span className="elo-dist-count">{count} ({percentage.toFixed(0)}%)</span>
+                                        </div>
+                                        <div className="elo-dist-progress-bg">
+                                            <div 
+                                                className={`elo-dist-progress-bar ${eloClasses[eloName]}`}
+                                                style={{ width: `${percentage}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            {/* Novidade 5: Galeria de Conquistas */}
+            <section className="ranking-section achievements-library-section">
+                <div className="section-header" style={{ justifyContent: 'space-between' }}>
+                    <h2>🏆 Biblioteca de Medalhas</h2>
+                    <button 
+                        className="btn secondary-btn"
+                        onClick={() => setShowAchievementsLibrary(!showAchievementsLibrary)}
+                        style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                    >
+                        {showAchievementsLibrary ? 'Ocultar Medalhas 📂' : 'Mostrar Medalhas 📁'}
+                    </button>
+                </div>
+                
+                {showAchievementsLibrary && (
+                    <div className="achievements-library-grid fade-in">
+                        {achievementsWithPlayers.map((ach) => (
+                            <div key={ach.id} className="achievement-library-card glass-panel">
+                                <div className="ach-lib-header">
+                                    <span className="ach-lib-icon">{ach.icon}</span>
+                                    <h4 className="ach-lib-name">{ach.name}</h4>
+                                </div>
+                                <p className="ach-lib-desc">{ach.desc}</p>
+                                <div className="ach-lib-unlocked">
+                                    <span className="ach-lib-unlocked-title">Detentores:</span>
+                                    {ach.unlockedBy.length > 0 ? (
+                                        <div className="ach-lib-unlocked-list">
+                                            {ach.unlockedBy.map(name => (
+                                                <Link to={`/player/${name}`} key={name} className="ach-lib-player-link">{name}</Link>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="ach-lib-no-players">Nenhum jogador</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
 
             {champions.length > 0 && (
                 <section className="ranking-section hall-of-fame-section">
@@ -206,13 +488,63 @@ function Ranking() {
                 </section>
             )}
 
+            {/* Novidade 2: Barra de Busca e Filtro por ELO */}
+            <div className="search-filter-bar glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className="search-input-wrapper" style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+                        <input 
+                            type="text" 
+                            placeholder="Buscar jogador..." 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)} 
+                            style={{
+                                width: '100%',
+                                padding: '0.6rem 1rem 0.6rem 2.5rem',
+                                background: 'rgba(0,0,0,0.3)',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '6px',
+                                color: 'var(--text-main)',
+                                fontFamily: 'Outfit, sans-serif'
+                            }}
+                        />
+                    </div>
+                    <div className="elo-filter-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button 
+                            className={`btn ${selectedEloFilter === 'All' ? 'purple-btn' : 'secondary-btn'}`}
+                            onClick={() => setSelectedEloFilter('All')}
+                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px' }}
+                        >
+                            Todos
+                        </button>
+                        {['Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Esmeralda', 'Diamante', 'Mestre', 'Challenger'].map(eloName => {
+                            const eloIcons = {
+                                'Ferro': '⚙️', 'Bronze': '🥉', 'Prata': '🥈', 'Ouro': '🥇', 
+                                'Platina': '💠', 'Esmeralda': '✳️', 'Diamante': '💎', 'Mestre': '👑', 'Challenger': '🏆'
+                            };
+                            const isActive = selectedEloFilter === eloName;
+                            return (
+                                <button 
+                                    key={eloName}
+                                    className={`btn ${isActive ? 'purple-btn' : 'secondary-btn'}`}
+                                    onClick={() => setSelectedEloFilter(eloName)}
+                                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                >
+                                    <span>{eloIcons[eloName]}</span> {eloName}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
             <section className="ranking-section">
                 <div className="section-header">
                     <h2>Ranking Oficial</h2>
                     <span className="badge">10+ Partidas</span>
                 </div>
                 <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={officialPlayers} isOfficial={true} isMobileView={isMobileView} trends={trends} />
+                    <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
                 </div>
             </section>
 
@@ -222,7 +554,7 @@ function Ranking() {
                     <span className="badge warning">Menos de 10 Partidas</span>
                 </div>
                 <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={provisionalPlayers} isOfficial={false} isMobileView={isMobileView} trends={trends} />
+                    <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
                 </div>
             </section>
         </div>

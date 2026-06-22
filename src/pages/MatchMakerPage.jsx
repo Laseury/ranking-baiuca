@@ -15,7 +15,7 @@ function MatchMakerPage() {
             <header>
                 <h1>ORGANIZAR <span>PARTIDA</span></h1>
             </header>
-            <MatchMaker players={seasonPlayers} onMatchResult={handleMatchResult} />
+            <MatchMaker players={seasonPlayers} currentSeason={currentSeason} onMatchResult={handleMatchResult} />
         </div>
     );
 }

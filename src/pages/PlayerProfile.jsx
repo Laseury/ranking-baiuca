@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { getElo } from '../utils/elo';
 import Streak from '../components/Streak';
-import { getPlayersForSeason, getSeasonOptions, calculateAchievements } from '../utils/season';
+import { getPlayersForSeason, getSeasonOptions, calculateAchievements, calculateTeamSynergies } from '../utils/season';
 import PDLChart from '../components/PDLChart';
 
 function PlayerProfile() {
@@ -72,7 +72,7 @@ function PlayerProfile() {
     if (!player) return <div className="container">Jogador não encontrado.</div>;
 
     return (
-        <div className="fade-in container">
+        <div className={`fade-in container profile-page-theme-${stats.elo.class}`}>
             <div className="profile-header glass-panel">
                 <div className="profile-avatar">{stats.elo.icon}</div>
                 <div className="profile-main-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -177,6 +177,10 @@ function PlayerProfile() {
                         <div className="player-cards-grid">
                             {stats.history.map(match => {
                                 const isWinner = match.winners.includes(player.name);
+                                const myTeam = isWinner ? match.winners : match.losers;
+                                const opponentTeam = isWinner ? match.losers : match.winners;
+                                const teamSynergies = calculateTeamSynergies(history, myTeam, match.season || 'Season 1');
+                                
                                 return (
                                     <div key={match.id} className={`player-card-mobile glass-panel ${isWinner ? 'win-border' : 'loss-border'}`}>
                                         <div className="card-mobile-header">
@@ -191,11 +195,20 @@ function PlayerProfile() {
                                         <div className="card-mobile-stats">
                                             <div className="stat-item">
                                                 <span className="label">ALIADOS</span>
-                                                <span className="value">{isWinner ? match.winners.filter(n => n !== player.name).join(', ') : match.losers.filter(n => n !== player.name).join(', ')}</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+                                                    <span className="value">{myTeam.filter(n => n !== player.name).join(', ')}</span>
+                                                    <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
+                                                        {teamSynergies.map((s, idx) => (
+                                                            <span key={idx} className={`synergy-tag ${s.type}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.3rem' }} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
+                                                                {s.type === 'good' ? '🔥' : '❄️'} {s.p1.slice(0, 4)} + {s.p2.slice(0, 4)}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="stat-item">
                                                 <span className="label">OPONENTES</span>
-                                                <span className="value">{isWinner ? match.losers.join(', ') : match.winners.join(', ')}</span>
+                                                <span className="value">{opponentTeam.join(', ')}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -216,14 +229,29 @@ function PlayerProfile() {
                             <tbody>
                                 {stats.history.map(match => {
                                     const isWinner = match.winners.includes(player.name);
+                                    const myTeam = isWinner ? match.winners : match.losers;
+                                    const opponentTeam = isWinner ? match.losers : match.winners;
+                                    const teamSynergies = calculateTeamSynergies(history, myTeam, match.season || 'Season 1');
+                                    
                                     return (
                                         <tr key={match.id} className="player-row" style={{ opacity: 1, animation: 'none' }}>
                                             <td>{match.date.split(' ')[0]}</td>
                                             <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
                                                 {isWinner ? 'VITÓRIA' : 'DERROTA'}
                                             </td>
-                                            <td>{isWinner ? match.winners.filter(n => n !== player.name).join(', ') : match.losers.filter(n => n !== player.name).join(', ')}</td>
-                                            <td>{isWinner ? match.losers.join(', ') : match.winners.join(', ')}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <span>{myTeam.filter(n => n !== player.name).join(', ')}</span>
+                                                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                                                        {teamSynergies.map((s, idx) => (
+                                                            <span key={idx} className={`synergy-tag ${s.type}`} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
+                                                                {s.type === 'good' ? '🔥' : '❄️'} {s.p1} + {s.p2}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{opponentTeam.join(', ')}</td>
                                             <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
                                                 {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`}
                                             </td>

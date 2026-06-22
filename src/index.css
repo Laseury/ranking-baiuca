@@ -1318,3 +1318,833 @@ th {
 .compare-bar-item {
   animation: fadeIn 0.8s ease-out;
 }
+
+/* --- PREMIUM VISUAL ENHANCEMENTS --- */
+
+/* Stats Layout Grid */
+.stats-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+@media (max-width: 900px) {
+  .stats-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* 1. Top 3 Podium */
+.podium-section {
+  margin-bottom: 4rem;
+}
+
+.podium-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 3rem 2rem;
+  gap: 2rem;
+  min-height: 380px;
+  background: radial-gradient(circle at center, rgba(200, 155, 60, 0.05) 0%, rgba(9, 20, 40, 0.6) 100%);
+  border: 1px solid var(--glass-border);
+}
+
+.podium-card {
+  flex: 1;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem;
+  background: rgba(10, 14, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.podium-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  background: rgba(10, 14, 20, 0.9);
+}
+
+.rank-1-card {
+  height: 280px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  order: 2; /* Renders in middle */
+  z-index: 2;
+}
+
+.rank-1-card:hover {
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
+}
+
+.rank-2-card {
+  height: 240px;
+  border: 1px solid #c0c0c0;
+  box-shadow: 0 0 15px rgba(192, 192, 192, 0.15);
+  order: 1; /* Renders on left */
+}
+
+.rank-2-card:hover {
+  box-shadow: 0 0 25px rgba(192, 192, 192, 0.25);
+}
+
+.rank-3-card {
+  height: 210px;
+  border: 1px solid #cd7f32;
+  box-shadow: 0 0 15px rgba(205, 127, 50, 0.15);
+  order: 3; /* Renders on right */
+}
+
+.rank-3-card:hover {
+  box-shadow: 0 0 25px rgba(205, 127, 50, 0.25);
+}
+
+.podium-crown-badge {
+  font-size: 2.2rem;
+  margin-top: -3.5rem;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.podium-position-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-top: -2.8rem;
+  margin-bottom: 1rem;
+}
+
+.podium-avatar-container {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.rank-1-card .podium-avatar-container {
+  border-color: #ffd700;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, rgba(0,0,0,0.5) 100%);
+}
+
+.rank-2-card .podium-avatar-container {
+  border-color: #c0c0c0;
+}
+
+.rank-3-card .podium-avatar-container {
+  border-color: #cd7f32;
+}
+
+.podium-elo-icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+}
+
+.rank-1-card .podium-elo-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));
+}
+
+.podium-player-name {
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.rank-1-card .podium-player-name {
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.podium-player-name:hover {
+  color: var(--primary-color);
+}
+
+.podium-stats-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin-top: auto;
+}
+
+.podium-stat {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.podium-stat.pdl {
+  background: rgba(200, 155, 60, 0.15);
+  color: var(--primary-color);
+  border: 1px solid rgba(200, 155, 60, 0.3);
+}
+
+.podium-stat.wr {
+  background: rgba(0, 210, 106, 0.1);
+  color: var(--win-color);
+  border: 1px solid rgba(0, 210, 106, 0.2);
+}
+
+@media (max-width: 600px) {
+  .podium-container {
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
+    padding: 2rem 1rem;
+    gap: 1.5rem;
+  }
+  .podium-card {
+    width: 100%;
+    max-width: 320px;
+    height: auto !important;
+    padding: 1.5rem;
+  }
+  .podium-position-badge, .podium-crown-badge {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+  .rank-1-card {
+    order: 1; /* Puts Rank 1 first in mobile list */
+  }
+}
+
+/* 2. Recent Matches Feed */
+.recent-matches-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recent-match-card {
+  padding: 1.2rem;
+  background: rgba(10, 14, 20, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.recent-match-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(200, 155, 60, 0.3);
+  background: rgba(10, 14, 20, 0.7);
+}
+
+.recent-match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.4rem;
+}
+
+.recent-match-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.recent-match-pdl {
+  font-size: 0.85rem;
+  color: var(--win-color);
+  font-weight: 800;
+  text-shadow: 0 0 5px rgba(0, 210, 106, 0.3);
+}
+
+.recent-match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.recent-match-team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.recent-match-team.winners {
+  text-align: right;
+}
+
+.recent-match-team.losers {
+  text-align: left;
+}
+
+.recent-match-player {
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.recent-match-team.winners .recent-match-player {
+  color: var(--win-color);
+}
+
+.recent-match-team.winners .recent-match-player:hover {
+  color: #55efc4;
+}
+
+.recent-match-team.losers .recent-match-player {
+  color: var(--text-muted);
+}
+
+.recent-match-team.losers .recent-match-player:hover {
+  color: var(--loss-color);
+}
+
+.recent-match-vs {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 3. ELO Distribution */
+.elo-dist-card {
+  padding: 1.5rem;
+}
+
+.elo-dist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.elo-dist-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.elo-dist-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.elo-dist-count {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.elo-dist-progress-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.elo-dist-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+/* Dynamic ELO Colors for progress bars and glows */
+.elo-dist-progress-bar.elo-challenger { background: linear-gradient(to right, #f8312f, #ffd700); }
+.elo-dist-progress-bar.elo-master { background: linear-gradient(to right, #bf55ec, #f8312f); }
+.elo-dist-progress-bar.elo-diamond { background: linear-gradient(to right, #22a7f0, #89c4f4); }
+.elo-dist-progress-bar.elo-emerald { background: linear-gradient(to right, #00b16a, #26a65b); }
+.elo-dist-progress-bar.elo-platinum { background: linear-gradient(to right, #4ecdc4, #a2ded0); }
+.elo-dist-progress-bar.elo-gold { background: linear-gradient(to right, #f5d76e, #f9bf3b); }
+.elo-dist-progress-bar.elo-silver { background: linear-gradient(to right, #bdc3c7, #ecf0f1); }
+.elo-dist-progress-bar.elo-bronze { background: linear-gradient(to right, #d35400, #e67e22); }
+.elo-dist-progress-bar.elo-iron { background: linear-gradient(to right, #6c7a89, #95a5a6); }
+
+/* 4. Achievements Showcase Library */
+.achievements-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.achievement-library-card {
+  padding: 1.5rem;
+  background: rgba(10, 14, 20, 0.7);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.achievement-library-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(200, 155, 60, 0.4);
+  box-shadow: 0 8px 24px rgba(200, 155, 60, 0.1);
+}
+
+.ach-lib-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.ach-lib-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+}
+
+.ach-lib-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  letter-spacing: 0.5px;
+}
+
+.ach-lib-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  flex-grow: 1;
+}
+
+.ach-lib-unlocked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 0.6rem;
+}
+
+.ach-lib-unlocked-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.ach-lib-unlocked-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ach-lib-player-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ach-lib-player-link:hover {
+  background: var(--primary-glow);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px var(--primary-glow);
+}
+
+.ach-lib-no-players {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* 5. Custom ELO styles for ELO badges */
+.elo-badge.elo-challenger { background: rgba(248, 49, 47, 0.15) !important; color: #f8312f !important; border: 1px solid rgba(248, 49, 47, 0.4) !important; }
+.elo-badge.elo-master { background: rgba(191, 85, 236, 0.15) !important; color: #bf55ec !important; border: 1px solid rgba(191, 85, 236, 0.4) !important; }
+.elo-badge.elo-diamond { background: rgba(34, 167, 240, 0.15) !important; color: #22a7f0 !important; border: 1px solid rgba(34, 167, 240, 0.4) !important; }
+.elo-badge.elo-emerald { background: rgba(0, 177, 106, 0.15) !important; color: #00b16a !important; border: 1px solid rgba(0, 177, 106, 0.4) !important; }
+.elo-badge.elo-platinum { background: rgba(78, 205, 196, 0.15) !important; color: #4ecdc4 !important; border: 1px solid rgba(78, 205, 196, 0.4) !important; }
+.elo-badge.elo-gold { background: rgba(245, 215, 110, 0.15) !important; color: #f5d76e !important; border: 1px solid rgba(245, 215, 110, 0.4) !important; }
+.elo-badge.elo-silver { background: rgba(189, 195, 199, 0.15) !important; color: #bdc3c7 !important; border: 1px solid rgba(189, 195, 199, 0.4) !important; }
+.elo-badge.elo-bronze { background: rgba(211, 84, 0, 0.15) !important; color: #d35400 !important; border: 1px solid rgba(211, 84, 0, 0.4) !important; }
+.elo-badge.elo-iron { background: rgba(108, 122, 137, 0.15) !important; color: #6c7a89 !important; border: 1px solid rgba(108, 122, 137, 0.4) !important; }
+
+/* --- RUNETERRA REGIONAL SUBTHEMES --- */
+.app-container {
+  transition: all 0.5s ease;
+}
+
+/* 1. Demacia */
+.app-container.region-demacia {
+  --primary-color: #f1c40f;          /* Royal Gold */
+  --primary-glow: rgba(241, 196, 15, 0.4);
+  --secondary-color: #1b3a4b;        /* Demacian Steel Blue */
+  --bg-color: #0c1520;
+  --glass-border: rgba(241, 196, 15, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(241, 196, 15, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(27, 58, 75, 0.5) 0%, transparent 50%);
+}
+
+/* 2. Noxus */
+.app-container.region-noxus {
+  --primary-color: #e74c3c;          /* Crimson Blood */
+  --primary-glow: rgba(231, 76, 60, 0.4);
+  --secondary-color: #2c3e50;        /* Dark Iron */
+  --bg-color: #110909;
+  --glass-border: rgba(231, 76, 60, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(231, 76, 60, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(44, 62, 80, 0.5) 0%, transparent 50%);
+}
+
+/* 3. Ionia */
+.app-container.region-ionia {
+  --primary-color: #fd79a8;          /* Lotus Pink */
+  --primary-glow: rgba(253, 121, 168, 0.4);
+  --secondary-color: #6c5ce7;        /* Mystic Violet */
+  --bg-color: #0d0a14;
+  --glass-border: rgba(253, 121, 168, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(253, 121, 168, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(108, 92, 231, 0.5) 0%, transparent 50%);
+}
+
+/* 4. Freljord */
+.app-container.region-freljord {
+  --primary-color: #00d2d3;          /* Glacial Ice Teal */
+  --primary-glow: rgba(0, 210, 211, 0.4);
+  --secondary-color: #2e86de;        /* Frozen Blue */
+  --bg-color: #090f16;
+  --glass-border: rgba(0, 210, 211, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(0, 210, 211, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(46, 134, 222, 0.5) 0%, transparent 50%);
+}
+
+/* 5. Shadow Isles */
+.app-container.region-shadow-isles {
+  --primary-color: #1dd1a1;          /* Spectral Mist Green */
+  --primary-glow: rgba(29, 209, 161, 0.4);
+  --secondary-color: #01a3a4;        /* Phantom Teal */
+  --bg-color: #050a0a;
+  --glass-border: rgba(29, 209, 161, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(29, 209, 161, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(1, 163, 164, 0.5) 0%, transparent 50%);
+}
+
+/* 6. Shurima */
+.app-container.region-shurima {
+  --primary-color: #f39c12;          /* Golden Desert Sun */
+  --primary-glow: rgba(243, 156, 18, 0.4);
+  --secondary-color: #d35400;        /* Sunburnt Bronze */
+  --bg-color: #141009;
+  --glass-border: rgba(243, 156, 18, 0.25);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(243, 156, 18, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(211, 84, 0, 0.5) 0%, transparent 50%);
+}
+
+/* --- ELO SPECIFIC PROFILE THEMES --- */
+.profile-page-theme-elo-challenger {
+  --p-color: #f8312f;
+  --p-glow: rgba(248, 49, 47, 0.4);
+}
+.profile-page-theme-elo-master {
+  --p-color: #bf55ec;
+  --p-glow: rgba(191, 85, 236, 0.4);
+}
+.profile-page-theme-elo-diamond {
+  --p-color: #22a7f0;
+  --p-glow: rgba(34, 167, 240, 0.4);
+}
+.profile-page-theme-elo-emerald {
+  --p-color: #00b16a;
+  --p-glow: rgba(0, 177, 106, 0.4);
+}
+.profile-page-theme-elo-platinum {
+  --p-color: #4ecdc4;
+  --p-glow: rgba(78, 205, 196, 0.4);
+}
+.profile-page-theme-elo-gold {
+  --p-color: #f5d76e;
+  --p-glow: rgba(245, 215, 110, 0.4);
+}
+.profile-page-theme-elo-silver {
+  --p-color: #bdc3c7;
+  --p-glow: rgba(189, 195, 199, 0.2);
+}
+.profile-page-theme-elo-bronze {
+  --p-color: #d35400;
+  --p-glow: rgba(211, 84, 0, 0.2);
+}
+.profile-page-theme-elo-iron {
+  --p-color: #6c7a89;
+  --p-glow: rgba(108, 122, 137, 0.2);
+}
+
+/* Applying Profile ELO Theme Variables */
+[class*="profile-page-theme-"] .profile-header {
+  border: 1px solid var(--p-color) !important;
+  box-shadow: 0 0 25px var(--p-glow) !important;
+  background: radial-gradient(circle at top, var(--p-glow) 0%, rgba(9, 20, 40, 0.8) 100%) !important;
+}
+
+[class*="profile-page-theme-"] .profile-avatar {
+  border: 2px solid var(--p-color) !important;
+  box-shadow: 0 0 15px var(--p-glow) !important;
+  background: rgba(0, 0, 0, 0.5);
+  animation: eloPulse 3s ease-in-out infinite;
+}
+
+@keyframes eloPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 15px var(--p-glow); }
+  50% { transform: scale(1.05); box-shadow: 0 0 25px var(--p-color); }
+}
+
+/* --- MATCHMAKER PREMIUM OVERLAYS & ANIMS --- */
+
+/* 1. Shuffling loading state */
+.shuffling-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: rgba(9, 20, 40, 0.8);
+  border: 1px dashed var(--primary-color);
+  border-radius: 12px;
+  min-height: 250px;
+  animation: fadeIn 0.3s ease-out;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.shuffling-card-deck {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.shuffling-card {
+  font-size: 2.5rem;
+  width: 70px;
+  height: 90px;
+  background: rgba(10, 14, 20, 0.9);
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.shuffling-card.card-1 { animation: shuffleCard1 1.2s infinite ease-in-out; }
+.shuffling-card.card-2 { animation: shuffleCard2 1.2s infinite ease-in-out; }
+.shuffling-card.card-3 { animation: shuffleCard3 1.2s infinite ease-in-out; }
+
+@keyframes shuffleCard1 {
+  0%, 100% { transform: rotate(-10deg) translate(0, 0); }
+  50% { transform: rotate(15deg) translate(-25px, -10px) scale(1.1); z-index: 5; }
+}
+@keyframes shuffleCard2 {
+  0%, 100% { transform: rotate(0) translate(0, 0); }
+  50% { transform: rotate(-15deg) translate(0, 10px) scale(0.9); }
+}
+@keyframes shuffleCard3 {
+  0%, 100% { transform: rotate(10deg) translate(0, 0); }
+  50% { transform: rotate(-5deg) translate(25px, -10px) scale(1.1); z-index: 5; }
+}
+
+/* 2. Celebration Overlay */
+.celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5, 5, 8, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.celebration-content {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(10, 14, 20, 0.9);
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 35px var(--primary-glow);
+  padding: 2.5rem;
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: celebrationSlide 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes celebrationSlide {
+  from { opacity: 0; transform: scale(0.8) translateY(50px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.celebration-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  text-shadow: 0 0 15px var(--primary-glow);
+  letter-spacing: 1px;
+}
+
+.celebration-pdl-counter {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.celebration-pdl-counter .pdl-text {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.celebration-pdl-counter .pdl-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--win-color);
+  text-shadow: 0 0 20px rgba(0, 210, 106, 0.5);
+  animation: bounceCount 0.4s ease;
+}
+
+@keyframes bounceCount {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.celebration-teams-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.celebration-team-col {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.celebration-team-col.winners h3 {
+  color: var(--win-color);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 210, 106, 0.2);
+  padding-bottom: 0.2rem;
+}
+
+.celebration-team-col.losers h3 {
+  color: var(--loss-color);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(248, 49, 47, 0.2);
+  padding-bottom: 0.2rem;
+}
+
+.celebration-team-col ul {
+  list-style: none;
+}
+
+.celebration-team-col ul li {
+  font-size: 0.95rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+}
+
+.celebration-team-col ul li:last-child {
+  border-bottom: none;
+}
+
+/* --- SYNERGY COLORS AND TAGS --- */
+.synergy-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+  align-self: center;
+}
+
+.synergy-tag.good {
+  background: rgba(200, 155, 60, 0.15);
+  color: var(--primary-color);
+  border: 1px solid rgba(200, 155, 60, 0.3);
+}
+
+.synergy-tag.bad {
+  background: rgba(248, 49, 47, 0.12);
+  color: var(--loss-color);
+  border: 1px solid rgba(248, 49, 47, 0.3);
+}
+
+.player-synergy-badge {
+  font-size: 0.7rem;
+  margin-left: 0.2rem;
+}
+
+.player-synergy-badge.good { color: #f9bf3b; text-shadow: 0 0 3px rgba(249, 191, 59, 0.5); }
+.player-synergy-badge.bad { color: #5c97bf; }
+
+
