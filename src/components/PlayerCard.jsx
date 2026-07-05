@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import Streak from './Streak';
+import PlayerAvatar from './PlayerAvatar';
+import Sparkline from './Sparkline';
 import { AppContext } from '../context/AppContext';
 import { calculateAchievements } from '../utils/season';
 
@@ -28,15 +30,18 @@ function PlayerCard({ player, index, isOfficial, trend, playersList }) {
                 <span className="rank-col" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                     {renderTrend()} #{index + 1}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                    <PlayerAvatar name={player.name} elo={player.elo} style={{ width: '28px', height: '28px' }} />
                     <Link to={`/player/${player.name}`} className="player-link">
                         {player.name}
                     </Link>
-                    {badges.map(badge => (
-                        <span key={badge.id} className="achievement-badge" title={`${badge.name}: ${badge.desc}`} style={{ cursor: 'help' }}>
-                            {badge.icon}
-                        </span>
-                    ))}
+                    <div style={{ display: 'inline-flex', gap: '0.2rem' }}>
+                        {badges.map(badge => (
+                            <span key={badge.id} className="achievement-badge" title={`${badge.name}: ${badge.desc}`} style={{ cursor: 'help' }}>
+                                {badge.icon}
+                            </span>
+                        ))}
+                    </div>
                 </div>
                 <span className={`elo-badge ${player.elo?.class || 'elo-iron'}`}>
                     {player.elo?.icon || '⚙️'} {player.elo?.name || 'Ferro'}
@@ -62,9 +67,12 @@ function PlayerCard({ player, index, isOfficial, trend, playersList }) {
                 </div>
             </div>
             
-            <div className="card-mobile-footer">
+            <div className="card-mobile-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="streak-container">
                     <Streak history={player.streak} />
+                </div>
+                <div className="card-mobile-sparkline" style={{ display: 'flex', alignItems: 'center' }}>
+                    <Sparkline history={player.ratingHistory} />
                 </div>
             </div>
         </div>

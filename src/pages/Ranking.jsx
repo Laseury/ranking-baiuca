@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import RankingTable from '../components/RankingTable';
+import PlayerAvatar from '../components/PlayerAvatar';
 import { getPlayersForSeason, getSeasonOptions, calculateRankingTrend, calculateAchievements } from '../utils/season';
 
 import Swal from 'sweetalert2';
@@ -16,8 +17,23 @@ const allAchievementsList = [
     { id: 'marathoner', icon: '⚔️', name: 'Maratonista', desc: 'O guerreiro com mais partidas disputadas na temporada!' },
     { id: 'veteran', icon: '🧙‍♂️', name: 'Veterano', desc: 'Disputou 20 ou mais partidas na temporada!' },
     { id: 'mvp-slayer', icon: '🎯', name: 'Algoz do Líder', desc: 'Venceu o líder do ranking mais vezes na temporada (mínimo 2 vitórias).' },
-    { id: 'promise', icon: '🌱', name: 'Promessa', desc: 'Jogador provisório (menos de 10 jogos) com Winrate de 60% ou mais (mínimo 3 partidas).' },
-    { id: 'cold-foot', icon: '❄️', name: 'Pé Frio', desc: 'Jogador oficial (10+ jogos) com Winrate abaixo de 35%.' }
+    { id: 'promise', icon: '🌱', name: 'Promessa', desc: 'Jogador provisório (menos de 10 jogos) com Winrate de 60% a 79% (mínimo 3 partidas).' },
+    { id: 'cold-foot', icon: '❄️', name: 'Pé Frio', desc: 'Jogador oficial (10+ jogos) com Winrate abaixo de 35%.' },
+    { id: 'carrasco', icon: '🩸', name: 'Carrasco', desc: 'Taxa de vitória implacável de 70% ou mais na temporada (mínimo 5 partidas).' },
+    { id: 'wall', icon: '🧱', name: 'Muralha', desc: 'Defesa impenetrável: mais de 10 jogos disputados e no máximo 4 derrotas no total.' },
+    { id: 'joker', icon: '🃏', name: 'Curinga', desc: 'Disputou partidas com pelo menos 5 parceiros de equipe diferentes nesta temporada!' },
+    { id: 'smurf', icon: '⚡🌱', name: 'Smurf', desc: 'Desempenho avassalador de 80% ou mais com menos de 10 jogos (mínimo 3 partidas).' },
+    { id: 'divine', icon: '🌌', name: 'Divino', desc: 'Alcançou o patamar celestial de 1200 ou mais PDL!' },
+    { id: 'carry', icon: '🎒', name: 'Carregador', desc: 'Carregou o piano! Winrate de 65% ou mais com 15+ jogos na temporada.' },
+    { id: 'void-child', icon: '👾', name: 'Filho do Vazio', desc: 'Sequência terrível de 5 ou mais derrotas seguidas!' },
+    { id: 'unbreakable', icon: '🛡️', name: 'Espírito Inquebrável', desc: 'Disputou pelo menos 30 partidas na temporada.' },
+    { id: 'gladiator', icon: '⚔️', name: 'Gladiador', desc: 'Venceu pelo menos 12 partidas na temporada.' },
+    { id: 'destroyer', icon: '💥', name: 'Destruidor', desc: 'Venceu pelo menos 15 partidas na temporada.' },
+    { id: 'lantern', icon: '🏮', name: 'Lanterna Vermelha', desc: 'Jogador oficial (10+ jogos) na última colocação em PDL da temporada.' },
+    { id: 'legendary-summoner', icon: '🐉', name: 'Invocador Lendário', desc: 'Atingiu o prestigiado Elo Mestre ou superior na temporada (1800+ PDL).' },
+    { id: 'perfect-balance', icon: '☯️', name: 'Equilíbrio Perfeito', desc: 'Jogador oficial com exatamente 50% de Winrate (equilíbrio total).' },
+    { id: 'general', icon: '🎖️', name: 'General da Baiuca', desc: 'Recordista absoluto de vitórias da temporada!' },
+    { id: 'collector', icon: '💎', name: 'Colecionador', desc: 'Detentor de 4 ou mais medalhas/títulos ativos simultaneamente!' }
 ];
 
 function Ranking() {
@@ -175,8 +191,10 @@ function Ranking() {
 
     const eloDistribution = useMemo(() => {
         const counts = {
-            'Challenger': 0, 'Mestre': 0, 'Diamante': 0, 'Esmeralda': 0, 
-            'Platina': 0, 'Ouro': 0, 'Prata': 0, 'Bronze': 0, 'Ferro': 0
+            'Lenda': 0, 'Radiante': 0, 'Challenger': 0, 'Grão-Mestre': 0, 'Mestre': 0,
+            'Safira': 0, 'Rubi': 0, 'Diamante': 0, 'Esmeralda': 0, 'Platina': 0,
+            'Ouro': 0, 'Prata': 0, 'Bronze': 0, 'Ferro': 0, 'Cobre': 0, 'Pedra': 0,
+            'Madeira': 0, 'Papelão': 0, 'Plástico': 0
         };
         const totalPlayers = officialPlayers.length + provisionalPlayers.length;
         [...officialPlayers, ...provisionalPlayers].forEach(p => {
@@ -307,16 +325,24 @@ function Ranking() {
                         >
                             Todos
                         </button>
-                        {['Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Esmeralda', 'Diamante', 'Mestre', 'Challenger'].map(eloName => {
+                        {['Plástico', 'Papelão', 'Madeira', 'Pedra', 'Cobre', 'Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Esmeralda', 'Diamante', 'Rubi', 'Safira', 'Mestre', 'Grão-Mestre', 'Challenger', 'Radiante', 'Lenda'].map(eloName => {
                             const eloIcons = {
+                                'Plástico': '🥤', 'Papelão': '📦', 'Madeira': '🪵', 'Pedra': '🪨', 'Cobre': '🟫',
                                 'Ferro': '⚙️', 'Bronze': '🥉', 'Prata': '🥈', 'Ouro': '🥇', 
-                                'Platina': '💠', 'Esmeralda': '✳️', 'Diamante': '💎', 'Mestre': '👑', 'Challenger': '🏆'
+                                'Platina': '💠', 'Esmeralda': '✳️', 'Diamante': '💎', 'Rubi': '🔻', 'Safira': '🔹',
+                                'Mestre': '👑', 'Grão-Mestre': '🔴', 'Challenger': '🏆', 'Radiante': '✨', 'Lenda': '🐉'
+                            };
+                            const eloClassMap = {
+                                'Plástico': 'plastico', 'Papelão': 'papelao', 'Madeira': 'madeira', 'Pedra': 'pedra', 'Cobre': 'cobre',
+                                'Ferro': 'ferro', 'Bronze': 'bronze', 'Prata': 'prata', 'Ouro': 'ouro',
+                                'Platina': 'platina', 'Esmeralda': 'esmeralda', 'Diamante': 'diamante', 'Rubi': 'rubi', 'Safira': 'safira',
+                                'Mestre': 'mestre', 'Grão-Mestre': 'grao-mestre', 'Challenger': 'challenger', 'Radiante': 'radiante', 'Lenda': 'lenda'
                             };
                             const isActive = selectedEloFilter === eloName;
                             return (
                                 <button 
                                     key={eloName}
-                                    className={`btn ${isActive ? 'purple-btn' : 'secondary-btn'}`}
+                                    className={`btn ${isActive ? `active-${eloClassMap[eloName]}` : 'secondary-btn'}`}
                                     onClick={() => setSelectedEloFilter(eloName)}
                                     style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                 >
@@ -363,8 +389,8 @@ function Ranking() {
                         {p2 && (
                             <div className="podium-card rank-2-card">
                                 <div className="podium-position-badge">#2</div>
-                                <div className="podium-avatar-container">
-                                    <span className="podium-elo-icon">{p2.elo?.icon || '🥈'}</span>
+                                <div className="podium-avatar-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.8rem' }}>
+                                    <PlayerAvatar name={p2.name} elo={p2.elo} style={{ width: '48px', height: '48px' }} />
                                 </div>
                                 <Link to={`/player/${p2.name}`} className="podium-player-name">{p2.name}</Link>
                                 <div className="podium-stats-row">
@@ -376,8 +402,8 @@ function Ranking() {
                         {p1 && (
                             <div className="podium-card rank-1-card">
                                 <div className="podium-crown-badge">👑</div>
-                                <div className="podium-avatar-container">
-                                    <span className="podium-elo-icon">{p1.elo?.icon || '🥇'}</span>
+                                <div className="podium-avatar-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.8rem' }}>
+                                    <PlayerAvatar name={p1.name} elo={p1.elo} style={{ width: '56px', height: '56px' }} />
                                 </div>
                                 <Link to={`/player/${p1.name}`} className="podium-player-name">{p1.name}</Link>
                                 <div className="podium-stats-row">
@@ -389,8 +415,8 @@ function Ranking() {
                         {p3 && (
                             <div className="podium-card rank-3-card">
                                 <div className="podium-position-badge">#3</div>
-                                <div className="podium-avatar-container">
-                                    <span className="podium-elo-icon">{p3.elo?.icon || '🥉'}</span>
+                                <div className="podium-avatar-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.8rem' }}>
+                                    <PlayerAvatar name={p3.name} elo={p3.elo} style={{ width: '48px', height: '48px' }} />
                                 </div>
                                 <Link to={`/player/${p3.name}`} className="podium-player-name">{p3.name}</Link>
                                 <div className="podium-stats-row">
@@ -452,13 +478,20 @@ function Ranking() {
                                 if (count === 0) return null;
                                 
                                 const eloClasses = {
-                                    'Challenger': 'elo-challenger', 'Mestre': 'elo-master', 'Diamante': 'elo-diamond',
-                                    'Esmeralda': 'elo-emerald', 'Platina': 'elo-platinum', 'Ouro': 'elo-gold',
-                                    'Prata': 'elo-silver', 'Bronze': 'elo-bronze', 'Ferro': 'elo-iron'
+                                    'Lenda': 'elo-legend', 'Radiante': 'elo-radiant', 'Challenger': 'elo-challenger',
+                                    'Grão-Mestre': 'elo-grandmaster', 'Mestre': 'elo-master', 'Safira': 'elo-sapphire',
+                                    'Rubi': 'elo-ruby', 'Diamante': 'elo-diamond', 'Esmeralda': 'elo-emerald',
+                                    'Platina': 'elo-platinum', 'Ouro': 'elo-gold', 'Prata': 'elo-silver',
+                                    'Bronze': 'elo-bronze', 'Ferro': 'elo-iron', 'Cobre': 'elo-copper',
+                                    'Pedra': 'elo-stone', 'Madeira': 'elo-wood', 'Papelão': 'elo-cardboard',
+                                    'Plástico': 'elo-plastic'
                                 };
                                 const eloIcons = {
-                                    'Challenger': '🏆', 'Mestre': '👑', 'Diamante': '💎', 'Esmeralda': '✳️',
-                                    'Platina': '💠', 'Ouro': '🥇', 'Prata': '🥈', 'Bronze': '🥉', 'Ferro': '⚙️'
+                                    'Lenda': '🐉', 'Radiante': '✨', 'Challenger': '🏆', 'Grão-Mestre': '🔴',
+                                    'Mestre': '👑', 'Safira': '🔹', 'Rubi': '🔻', 'Diamante': '💎',
+                                    'Esmeralda': '✳️', 'Platina': '💠', 'Ouro': '🥇', 'Prata': '🥈',
+                                    'Bronze': '🥉', 'Ferro': '⚙️', 'Cobre': '🟫', 'Pedra': '🪨',
+                                    'Madeira': '🪵', 'Papelão': '📦', 'Plástico': '🥤'
                                 };
                                 
                                 return (

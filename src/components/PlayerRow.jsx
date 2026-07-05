@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import Streak from './Streak';
+import PlayerAvatar from './PlayerAvatar';
+import Sparkline from './Sparkline';
 import { AppContext } from '../context/AppContext';
 import { calculateAchievements } from '../utils/season';
 
@@ -35,6 +37,7 @@ function PlayerRow({ player, index, isOfficial, trend, playersList }) {
             </td>
             <td className="player-col">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <PlayerAvatar name={player.name} elo={player.elo} />
                     <span className={`elo-badge ${player.elo?.class || 'elo-iron'}`} style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }}>
                         {player.elo?.icon || '⚙️'} {player.elo?.name || 'Ferro'}
                     </span>
@@ -55,6 +58,9 @@ function PlayerRow({ player, index, isOfficial, trend, playersList }) {
             <td>{player.derrotas}</td>
             <td className={winrateClass}>{player.winrate}%</td>
             <td className="points-col">{player.pontos} PDL</td>
+            <td className="sparkline-col">
+                <Sparkline history={player.ratingHistory} />
+            </td>
             <td>
                 <div className="streak-container">
                     <Streak history={player.streak} />

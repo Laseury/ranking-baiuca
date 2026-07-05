@@ -13,7 +13,8 @@ export function processPlayersBySeason(players, history, selectedSeason) {
             derrotas: 0,
             total: 0,
             rating: 1000,
-            streak: []
+            streak: [],
+            ratingHistory: [1000]
         };
     });
 
@@ -31,6 +32,7 @@ export function processPlayersBySeason(players, history, selectedSeason) {
                 seasonStats[name].total++;
                 seasonStats[name].rating += (match.pontosGanhos || 20);
                 seasonStats[name].streak = [...(seasonStats[name].streak || []), "W"].slice(-5);
+                seasonStats[name].ratingHistory.push(seasonStats[name].rating);
             }
         });
         match.losers.forEach(name => {
@@ -39,6 +41,7 @@ export function processPlayersBySeason(players, history, selectedSeason) {
                 seasonStats[name].total++;
                 seasonStats[name].rating = Math.max(0, seasonStats[name].rating - (match.pontosPerdidos || 20));
                 seasonStats[name].streak = [...(seasonStats[name].streak || []), "L"].slice(-5);
+                seasonStats[name].ratingHistory.push(seasonStats[name].rating);
             }
         });
     });
@@ -63,15 +66,18 @@ export function processPlayersBySeason(players, history, selectedSeason) {
  */
 export function getPlayersForSeason(players, history, season, currentSeason) {
     if (season === currentSeason && season === "Season 1") {
+        const processed = processPlayersBySeason(players, history, "Season 1");
         return players.map(p => {
             const winrate = p.total > 0 ? ((p.vitorias / p.total) * 100).toFixed(1) : 0;
             const rating = p.rating !== undefined ? p.rating : (1000 + (p.vitorias - p.derrotas) * 20);
+            const procPlayer = processed.find(x => x.name === p.name);
             return {
                 ...p,
                 winrate: parseFloat(winrate),
                 pontos: rating,
                 rating: rating,
-                elo: getElo(rating)
+                elo: getElo(rating),
+                ratingHistory: procPlayer ? procPlayer.ratingHistory : [1000]
             };
         });
     } else {
@@ -338,8 +344,8 @@ export function calculateAchievements(player, playersList, history, season) {
         });
     }
 
-    // 9. Promessa: provisional player with WR >= 60% and total >= 3
-    if (player.total < 10 && player.total >= 3 && player.winrate >= 60) {
+    // 9. Promessa: provisional player with WR >= 60% and WR < 80% and total >= 3
+    if (player.total < 10 && player.total >= 3 && player.winrate >= 60 && player.winrate < 80) {
         badges.push({
             id: 'promise',
             icon: '🌱',
@@ -355,6 +361,181 @@ export function calculateAchievements(player, playersList, history, season) {
             icon: '❄️',
             name: 'Pé Frio',
             desc: `Taxa de vitória de ${player.winrate}% em ${player.total} jogos. Fase difícil!`
+        });
+    }
+
+    // 11. Carrasco: Winrate >= 70% and total >= 5
+    if (player.winrate >= 70 && player.total >= 5) {
+        badges.push({
+            id: 'carrasco',
+            icon: '🩸',
+            name: 'Carrasco',
+            desc: `Taxa de vitória implacável de ${player.winrate}% em ${player.total} partidas!`
+        });
+    }
+
+    // 12. Muralha: total >= 10 and derrotas <= 4
+    if (player.total >= 10 && player.derrotas <= 4) {
+        badges.push({
+            id: 'wall',
+            icon: '🧱',
+            name: 'Muralha',
+            desc: `Defesa impenetrável: disputou ${player.total} partidas e sofreu apenas ${player.derrotas} derrotas!`
+        });
+    }
+
+    // 13. Curinga: played with 5 or more different teammates
+    const activeSeasonMatches = history.filter(m => 
+        m.season === season || (!m.season && season === 'Season 1')
+    );
+    const teammates = new Set();
+    activeSeasonMatches.forEach(match => {
+        if (match.winners.includes(player.name)) {
+            match.winners.forEach(w => {
+                if (w !== player.name) teammates.add(w);
+            });
+        } else if (match.losers.includes(player.name)) {
+            match.losers.forEach(l => {
+                if (l !== player.name) teammates.add(l);
+            });
+        }
+    });
+    if (teammates.size >= 5) {
+        badges.push({
+            id: 'joker',
+            icon: '🃏',
+            name: 'Curinga',
+            desc: `Jogou com ${teammates.size} parceiros de equipe diferentes nesta temporada!`
+        });
+    }
+
+    // 14. Smurf: provisional player with WR >= 80% and total >= 3
+    if (player.total < 10 && player.total >= 3 && player.winrate >= 80) {
+        badges.push({
+            id: 'smurf',
+            icon: '⚡🌱',
+            name: 'Smurf',
+            desc: `Desempenho avassalador de ${player.winrate}% em apenas ${player.total} jogos!`
+        });
+    }
+
+    // 15. Divino: rating >= 1200
+    if (player.pontos >= 1200) {
+        badges.push({
+            id: 'divine',
+            icon: '🌌',
+            name: 'Divino',
+            desc: `Alcançou o patamar celestial com ${player.pontos} PDL!`
+        });
+    }
+
+    // 16. Carregador: total >= 15 and WR >= 65
+    if (player.total >= 15 && player.winrate >= 65) {
+        badges.push({
+            id: 'carry',
+            icon: '🎒',
+            name: 'Carregador',
+            desc: `Carregou o piano! Winrate de ${player.winrate}% em ${player.total} jogos.`
+        });
+    }
+
+    // 17. Filho do Vazio: currentLossStreak >= 5
+    if (currentLossStreak >= 5) {
+        badges.push({
+            id: 'void-child',
+            icon: '👾',
+            name: 'Filho do Vazio',
+            desc: `Sequência de ${currentLossStreak} derrotas seguidas... O abismo te abraçou.`
+        });
+    }
+
+    // 18. Espírito Inquebrável: total >= 30
+    if (player.total >= 30) {
+        badges.push({
+            id: 'unbreakable',
+            icon: '🛡️',
+            name: 'Espírito Inquebrável',
+            desc: `Inabalável na jornada! Disputou ${player.total} partidas nesta temporada.`
+        });
+    }
+
+    // 19. Gladiador: vitorias >= 12
+    if (player.vitorias >= 12) {
+        badges.push({
+            id: 'gladiator',
+            icon: '⚔️',
+            name: 'Gladiador',
+            desc: `Guerreiro de arena: conquistou ${player.vitorias} vitórias nesta temporada!`
+        });
+    }
+
+    // 20. Destruidor: vitorias >= 15
+    if (player.vitorias >= 15) {
+        badges.push({
+            id: 'destroyer',
+            icon: '💥',
+            name: 'Destruidor',
+            desc: `Deixou apenas cinzas: somou ${player.vitorias} vitórias na temporada!`
+        });
+    }
+
+    // 21. Lanterna Vermelha: official player with lowest PDL
+    if (player.total >= 10) {
+        const officialPlayers = playersList.filter(p => p.total >= 10);
+        if (officialPlayers.length > 0) {
+            const minPoints = Math.min(...officialPlayers.map(p => p.pontos));
+            if (player.pontos === minPoints) {
+                badges.push({
+                    id: 'lantern',
+                    icon: '🏮',
+                    name: 'Lanterna Vermelha',
+                    desc: 'Lanterna do campeonato. Só resta subir!'
+                });
+            }
+        }
+    }
+
+    // 22. Invocador Lendário: points >= 1800
+    if (player.pontos >= 1800) {
+        badges.push({
+            id: 'legendary-summoner',
+            icon: '🐉',
+            name: 'Invocador Lendário',
+            desc: `Alcançou o patamar de Mestre+ com ${player.pontos} PDL!`
+        });
+    }
+
+    // 23. Equilíbrio Perfeito: total >= 10 and WR === 50
+    if (player.total >= 10 && player.winrate === 50) {
+        badges.push({
+            id: 'perfect-balance',
+            icon: '☯️',
+            name: 'Equilíbrio Perfeito',
+            desc: 'Equilíbrio absoluto: 50% de vitórias e 50% de derrotas.'
+        });
+    }
+
+    // 24. General da Baiuca: most wins in season
+    const winsActivePlayers = playersList.filter(p => p.total > 0);
+    if (winsActivePlayers.length > 0) {
+        const maxWins = Math.max(...winsActivePlayers.map(p => p.vitorias || 0));
+        if (player.vitorias === maxWins && player.vitorias > 0) {
+            badges.push({
+                id: 'general',
+                icon: '🎖️',
+                name: 'General da Baiuca',
+                desc: `Líder militar da temporada com o recorde de ${player.vitorias} vitórias!`
+            });
+        }
+    }
+
+    // 25. Colecionador: has 4 or more other badges
+    if (badges.length >= 4) {
+        badges.push({
+            id: 'collector',
+            icon: '💎',
+            name: 'Colecionador',
+            desc: `Ostentando prestígio! Possui ${badges.length} títulos ativos simultaneamente.`
         });
     }
     
