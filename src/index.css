@@ -2381,5 +2381,365 @@ th {
   vertical-align: middle;
 }
 
+/* ==========================================================================
+   PROFILE PAGE — ENHANCED DASHBOARD STYLES
+   ========================================================================== */
 
+/* Stat card with icon background */
+.stat-card {
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card h5 {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.6rem;
+}
+
+.stat-card .value {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+/* Elo Progress Bar */
+.elo-progress-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: 0.8rem auto 0;
+}
+
+.elo-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.elo-progress-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.elo-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--primary-color), rgba(255,255,255,0.6));
+  border-radius: 99px;
+  transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* PDL Stats Banner */
+.pdl-stats-banner {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.pdl-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pdl-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pdl-stat-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+.pdl-stat-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  align-self: stretch;
+}
+
+/* Weekly Heatmap */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+
+.heatmap-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.heatmap-square {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.heatmap-square:hover {
+  transform: scale(1.1);
+}
+
+.heatmap-day-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.heatmap-wins {
+  font-size: 0.65rem;
+  color: var(--win-color);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.heatmap-losses {
+  font-size: 0.6rem;
+  color: var(--loss-color);
+  line-height: 1;
+}
+
+/* Adversary Panel */
+.adversary-panel {
+  padding: 1.5rem;
+}
+
+.adversary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.adversary-row:hover {
+  transform: translateX(4px);
+}
+
+.adversary-row.victory-row {
+  background: rgba(0, 210, 106, 0.08);
+  border: 1px solid rgba(0, 210, 106, 0.2);
+}
+
+.adversary-row.defeat-row {
+  background: rgba(248, 49, 47, 0.08);
+  border: 1px solid rgba(248, 49, 47, 0.2);
+}
+
+.adversary-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.2rem;
+}
+
+.adversary-name {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.adversary-count {
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+/* ==========================================================================
+   COMPARE PAGE — ENHANCED DASHBOARD STYLES
+   ========================================================================== */
+
+/* Compare header card mini-stats row */
+.compare-mini-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.compare-mini-stat {
+  text-align: center;
+}
+
+.compare-mini-stat-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.compare-mini-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Diagnosis grid */
+.diagnosis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.diagnosis-card {
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.diagnosis-card:hover {
+  transform: translateY(-3px);
+}
+
+.diagnosis-card.a-wins {
+  background: rgba(0, 210, 255, 0.07);
+  border: 1px solid rgba(0, 210, 255, 0.2);
+}
+
+.diagnosis-card.b-wins {
+  background: rgba(255, 0, 234, 0.07);
+  border: 1px solid rgba(255, 0, 234, 0.2);
+}
+
+.diagnosis-card.tied {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.diagnosis-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.diagnosis-category-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.diagnosis-values {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.diagnosis-winner {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Verdict box */
+.compare-verdict {
+  text-align: center;
+  padding: 1.2rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.compare-verdict-emoji {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.compare-verdict-text {
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+/* Shared match history row */
+.shared-match-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 0.6rem;
+  transition: background 0.2s ease;
+}
+
+.shared-match-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.shared-match-type {
+  font-weight: 700;
+}
+
+.shared-match-teams {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .heatmap-grid {
+    gap: 0.25rem;
+  }
+
+  .heatmap-wins,
+  .heatmap-losses {
+    font-size: 0.55rem;
+  }
+
+  .heatmap-day-label {
+    font-size: 0.55rem;
+  }
+
+  .pdl-stats-banner {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .pdl-stat-value {
+    font-size: 1.2rem;
+  }
+
+  .diagnosis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .shared-match-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}

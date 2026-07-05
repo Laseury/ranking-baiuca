@@ -10,7 +10,7 @@ function Streak({ history }) {
                     key={idx} 
                     className={`streak-box ${result === 'W' ? 'streak-w' : 'streak-l'}`}
                 >
-                    {result}
+                    {result === 'W' ? 'V' : 'D'}
                 </div>
             ))}
         </>
