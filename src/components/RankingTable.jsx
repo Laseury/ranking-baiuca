@@ -35,7 +35,6 @@ function RankingTable({ players, isOfficial, isMobileView, trends }) {
                     <th>Derrotas</th>
                     <th>Winrate</th>
                     <th>Pontos</th>
-                    <th>Evolução</th>
                     <th>Sequência</th>
                 </tr>
             </thead>

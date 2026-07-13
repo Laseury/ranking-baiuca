@@ -58,9 +58,6 @@ function PlayerRow({ player, index, isOfficial, trend, playersList }) {
             <td>{player.derrotas}</td>
             <td className={winrateClass}>{player.winrate}%</td>
             <td className="points-col">{player.pontos} PDL</td>
-            <td className="sparkline-col">
-                <Sparkline history={player.ratingHistory} />
-            </td>
             <td>
                 <div className="streak-container">
                     <Streak history={player.streak} />
