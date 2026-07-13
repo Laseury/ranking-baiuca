@@ -23,13 +23,11 @@
 
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-color);
-  background-image: 
-      radial-gradient(circle at 15% 50%, rgba(200, 155, 60, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 85% 30%, rgba(9, 20, 40, 0.5) 0%, transparent 50%);
+  background-color: #0a0a0c;
   color: var(--text-main);
   min-height: 100vh;
-  padding: 2rem 1rem;
+  margin: 0;
+  padding: 0;
 }
 
 .container {
@@ -153,6 +151,25 @@ h2 {
 .table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--primary-glow);
+  border-radius: 3px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
 }
 
 table {
@@ -1808,7 +1825,13 @@ th {
 
 /* --- RUNETERRA REGIONAL SUBTHEMES --- */
 .app-container {
+  min-height: 100vh;
+  padding: 2rem 1rem;
   transition: all 0.5s ease;
+  background-color: var(--bg-color);
+  background-image: 
+      radial-gradient(circle at 15% 50%, rgba(200, 155, 60, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(9, 20, 40, 0.5) 0%, transparent 50%);
 }
 
 /* 1. Demacia */

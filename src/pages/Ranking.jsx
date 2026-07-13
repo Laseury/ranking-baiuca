@@ -360,9 +360,17 @@ function Ranking() {
                     <h2>Ranking Oficial</h2>
                     <span className="badge">10+ Partidas</span>
                 </div>
-                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
-                </div>
+                {isMobileView ? (
+                    <div className="mobile-grid">
+                        <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
+                    </div>
+                ) : (
+                    <div className="glass-panel">
+                        <div className="table-container">
+                            <RankingTable players={filteredOfficial} isOfficial={true} isMobileView={isMobileView} trends={trends} />
+                        </div>
+                    </div>
+                )}
             </section>
 
             {/* ── RANKING PROVISÓRIO ── */}
@@ -371,9 +379,17 @@ function Ranking() {
                     <h2>Ranking Provisório</h2>
                     <span className="badge warning">Menos de 10 Partidas</span>
                 </div>
-                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
-                </div>
+                {isMobileView ? (
+                    <div className="mobile-grid">
+                        <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
+                    </div>
+                ) : (
+                    <div className="glass-panel">
+                        <div className="table-container">
+                            <RankingTable players={filteredProvisional} isOfficial={false} isMobileView={isMobileView} trends={trends} />
+                        </div>
+                    </div>
+                )}
             </section>
 
             {/* ══ SEÇÕES EXTRAS — abaixo do ranking ══ */}

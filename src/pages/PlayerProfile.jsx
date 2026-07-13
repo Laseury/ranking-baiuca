@@ -364,10 +364,12 @@ function PlayerProfile() {
                         {isMobileView ? 'Ver Modo Desktop 🖥️' : 'Ver Modo Mobile 📱'}
                     </button>
                 </div>
-                <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
-                    {stats.history.length === 0 ? (
+                {stats.history.length === 0 ? (
+                    <div className={`table-container ${isMobileView ? 'mobile-grid' : 'glass-panel'}`}>
                         <div className="empty-state">Nenhuma partida jogada nesta temporada.</div>
-                    ) : isMobileView ? (
+                    </div>
+                ) : isMobileView ? (
+                    <div className="mobile-grid">
                         <div className="player-cards-grid">
                             {stats.history.map(match => {
                                 const isWinner = match.winners.includes(player.name);
@@ -409,53 +411,57 @@ function PlayerProfile() {
                                 );
                             })}
                         </div>
-                    ) : (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Resultado</th>
-                                    <th>Aliados</th>
-                                    <th>Oponentes</th>
-                                    <th>Pontos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {stats.history.map(match => {
-                                    const isWinner = match.winners.includes(player.name);
-                                    const myTeam = isWinner ? match.winners : match.losers;
-                                    const opponentTeam = isWinner ? match.losers : match.winners;
-                                    const teamSynergies = calculateTeamSynergies(history, myTeam, match.season || 'Season 1');
+                    </div>
+                ) : (
+                    <div className="glass-panel">
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Resultado</th>
+                                        <th>Aliados</th>
+                                        <th>Oponentes</th>
+                                        <th>Pontos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stats.history.map(match => {
+                                        const isWinner = match.winners.includes(player.name);
+                                        const myTeam = isWinner ? match.winners : match.losers;
+                                        const opponentTeam = isWinner ? match.losers : match.winners;
+                                        const teamSynergies = calculateTeamSynergies(history, myTeam, match.season || 'Season 1');
 
-                                    return (
-                                        <tr key={match.id} className="player-row" style={{ opacity: 1, animation: 'none' }}>
-                                            <td>{match.date.split(' ')[0]}</td>
-                                            <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
-                                                {isWinner ? 'VITÓRIA' : 'DERROTA'}
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <span>{myTeam.filter(n => n !== player.name).join(', ')}</span>
-                                                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                                                        {teamSynergies.map((s, idx) => (
-                                                            <span key={idx} className={`synergy-tag ${s.type}`} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
-                                                                {s.type === 'good' ? '🔥' : '❄️'} {s.p1} + {s.p2}
-                                                            </span>
-                                                        ))}
+                                        return (
+                                            <tr key={match.id} className="player-row" style={{ opacity: 1, animation: 'none' }}>
+                                                <td>{match.date.split(' ')[0]}</td>
+                                                <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
+                                                    {isWinner ? 'VITÓRIA' : 'DERROTA'}
+                                                </td>
+                                                <td>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <span>{myTeam.filter(n => n !== player.name).join(', ')}</span>
+                                                        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                                                            {teamSynergies.map((s, idx) => (
+                                                                <span key={idx} className={`synergy-tag ${s.type}`} title={`Taxa de vitória: ${s.wr.toFixed(0)}%`}>
+                                                                    {s.type === 'good' ? '🔥' : '❄️'} {s.p1} + {s.p2}
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td>{opponentTeam.join(', ')}</td>
-                                            <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
-                                                {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                                </td>
+                                                <td>{opponentTeam.join(', ')}</td>
+                                                <td className={isWinner ? 'winrate-high' : 'winrate-low'}>
+                                                    {isWinner ? `+${match.pontosGanhos || 20}` : `-${match.pontosPerdidos || 20}`}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </section>
         </div>
     );
